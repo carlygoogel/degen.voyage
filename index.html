@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>DEGEN — Flip It</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>DEGEN</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@500;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -27,6 +27,7 @@ body{
   color:var(--text);
   overflow:hidden;
   user-select:none;
+  overscroll-behavior:none;
 }
 /* ambient table */
 .table{
@@ -45,7 +46,21 @@ body{
 .stage{
   position:relative;height:100%;max-width:460px;margin:0 auto;
   display:flex;flex-direction:column;align-items:center;
-  padding:max(18px, env(safe-area-inset-top)) 20px max(18px, env(safe-area-inset-bottom));
+  padding:max(14px, env(safe-area-inset-top)) 20px max(14px, env(safe-area-inset-bottom));
+}
+/* real phone viewport: track the dynamic toolbar so controls never sit under it */
+@supports (height:100dvh){ html,body{height:100dvh} .stage{height:100dvh} }
+/* short screens: shrink the chrome so everything fits without scrolling */
+@media (max-height:720px){
+  .wordmark{font-size:34px}
+  .coin{--d:min(52vw,200px)}
+  .controls{gap:9px}
+  .side-btn{font-size:21px;padding:11px 0 9px;border-radius:13px}
+  .wg{min-width:44px;padding:7px 0;font-size:13px}
+  .hint{min-height:22px;padding:4px 0 0;font-size:13px}
+  .bank{padding:6px 12px}
+  .bank .amt{font-size:18px}
+  .mute{width:36px;height:36px;font-size:15px}
 }
 
 /* ── header ── */
@@ -240,9 +255,9 @@ header{width:100%;display:flex;align-items:flex-end;justify-content:space-betwee
   box-shadow:0 6px 26px rgba(212,160,32,.4), inset 0 1px 0 #fffbe8;
   transform:translateY(-2px);
 }
-.wager-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.wager-lbl{font-size:10px;letter-spacing:.3em;color:var(--dim)}
-.wagers{display:flex;gap:8px}
+.wager-row{display:flex;align-items:center;justify-content:center;gap:10px}
+.wagers{display:flex;gap:8px;width:100%}
+.wagers .wg{flex:1}
 .wg{
   font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:14px;
   min-width:48px;padding:9px 0;border-radius:12px;cursor:pointer;
@@ -432,7 +447,6 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:25}
       <button class="side-btn" id="btnTails" data-side="tails">TAILS</button>
     </div>
     <div class="wager-row">
-      <div class="wager-lbl">WAGER · COINS</div>
       <div class="wagers" id="wagers">
         <button class="wg sel" data-w="1">1</button>
         <button class="wg" data-w="5">5</button>
@@ -454,16 +468,14 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:25}
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet">
   <h2>BUY DEGEN COINS</h2>
-  <p id="sheetSub"></p>
   <div class="chips">
     <button class="chip" data-amt="1"><span>$1</span></button>
     <button class="chip" data-amt="5"><span>$5</span></button>
     <button class="chip" data-amt="10"><span>$10</span></button>
     <button class="chip" data-amt="20"><span>$20</span></button>
   </div>
-  <p class="fine">$1 = 1 Degen Coin. Degen Coins are for play only — they never convert
-  back to cash and can't be withdrawn. Every flip pays 2× on a 55% win chance —
-  the odds are tilted in your favor.</p>
+  <p class="fine">$1 = 1 Degen Coin. Play money only — Degen Coins never convert
+  back to cash.</p>
 </div>
 
 <script>
@@ -493,18 +505,21 @@ let pendingCredit=0; /* win amount owed while the coin-flight animation plays */
    4. Dry-run first: make the links in Stripe Test mode and pay
       with card 4242 4242 4242 4242 (any future date / any CVC),
       then swap in the Live-mode links.
-   Flow: tap chip → balance saved → Stripe checkout (same tab) →
-   pay → redirect back with ?coins=N → coins credited, URL cleaned.
+   Flow: tap chip → balance saved → Stripe checkout opens in a
+   POPUP so the table never unloads (same-tab fallback if the popup
+   is blocked) → pay → Stripe redirects the popup to ?coins=N → the
+   popup credits the coins to localStorage and closes itself → the
+   open table hears the storage event and syncs the balance live.
    Until links are pasted in, chips grant free demo coins.
    Balance persists in localStorage where available.
    Degen Coins never convert back to dollars — play money only.
    Honor-system caveat: with no server, ?coins=N typed by hand also
    credits. Fine for an arcade toy; a webhook backend fixes it.     */
 const PAY_LINKS = {
-  1:  'https://buy.stripe.com/test_cNi6oH5wkb7QaDNaKUd3i00', /* TEST-MODE — swap for live link */
-  5:  '',   /* paste buy.stripe.com links as you create them */
-  10: '',
-  20: ''
+  1:  'https://buy.stripe.com/test_cNi6oH5wkb7QaDNaKUd3i00', /* TEST-MODE — swap all 4 for live links */
+  5:  'https://buy.stripe.com/test_6oUfZh2k80tccLV5qAd3i01',
+  10: 'https://buy.stripe.com/test_5kQ28r8IwdfY5jtbOYd3i02',
+  20: 'https://buy.stripe.com/test_fZu8wPgaYcbU3bl06gd3i03'
 };
 /* safe storage: works when hosted; silently skipped in sandboxed previews */
 function saveBal(){ try{ localStorage.setItem('degen_bal', balance); }catch(e){} }
@@ -514,9 +529,9 @@ function loadBal(){ try{ return Math.max(0, +localStorage.getItem('degen_bal') |
 
 /* ── balance ── */
 balance=loadBal(); 
-/* the coin itself is the toss button — the hint says what a tap will do */
+/* the coin itself is the toss button (tapping while broke opens the buy sheet) */
 function updateHint(){
-  hint.textContent = flipping ? '' : (balance < wager ? 'TAP THE COIN TO BUY COINS' : 'TAP THE COIN TO TOSS');
+  hint.textContent = (flipping || balance < wager) ? '' : 'TAP THE COIN TO TOSS';
 }
 function setBalance(v, animate=true){
   const from=balance; balance=v; saveBal();
@@ -534,10 +549,6 @@ balanceEl.textContent=''+balance;
 updateHint();
 
 /* ── deposit sheet ── */
-const linksReady = Object.values(PAY_LINKS).some(v=>v);
-$('sheetSub').textContent = linksReady
-  ? 'Secure checkout by Stripe · you’ll be right back at the table'
-  : 'Demo mode — chips add free practice coins until Stripe links are pasted in';
 function openSheet(){ sheet.classList.add('open'); scrim.classList.add('open'); }
 function closeSheet(){ sheet.classList.remove('open'); scrim.classList.remove('open'); }
 scrim.onclick=closeSheet;
@@ -545,7 +556,13 @@ bank.onclick=openSheet;
 document.querySelectorAll('.chip').forEach(c=>{
   c.onclick=()=>{
     const amt=+c.dataset.amt, link=PAY_LINKS[amt];
-    if(link){ saveBal(); location.href=link; return; } /* pay → redirected back with ?coins=N */
+    if(link){
+      saveBal();
+      /* checkout in a popup keeps the table alive behind it */
+      const w=window.open(link, 'degen_pay', 'popup,width=480,height=780');
+      if(!w) location.href=link; /* popup blocked → classic same-tab redirect */
+      return;
+    }
     setBalance(balance + amt); closeSheet(); chime();  /* demo mode when no link set */
   };
 });
@@ -559,8 +576,39 @@ document.querySelectorAll('.chip').forEach(c=>{
     toast.textContent=`PAYMENT RECEIVED · +${bought} DEGEN COIN${bought>1?'S':''}`;
     toast.classList.add('go');
     setTimeout(()=>toast.classList.remove('go'), 3600);
+    /* if this page IS the checkout popup, hand coins to the table and bow out.
+       window.name survives the round trip through Stripe, opener may not */
+    let popup = (window.name==='degen_pay');
+    try{ popup = popup || !!(window.opener && !window.opener.closed); }catch(e){ popup=true; }
+    if(popup){
+      toast.textContent=`+${bought} DEGEN COIN${bought>1?'S':''} — BACK TO YOUR TABLE`;
+      setTimeout(()=>{
+        window.close();
+        /* some browsers refuse to close a navigated popup — leave a clear exit */
+        setTimeout(()=>{
+          toast.style.animation='none'; toast.style.opacity='1';
+          toast.style.transform='translate(-50%,0)';
+          toast.textContent='PAID ✓ — CLOSE THIS WINDOW TO RETURN TO YOUR TABLE';
+        }, 400);
+      }, 1400);
+    }
   }
 })();
+/* the open table live-syncs coins credited by the popup (or another tab) */
+addEventListener('storage', e=>{
+  if(e.key!=='degen_bal') return;
+  const v=Math.max(0, +e.newValue||0);
+  if(v===balance) return;
+  if(flipping){ balance=v; return; } /* fold in quietly; the flip settles on top */
+  const gained=v-balance;
+  setBalance(v);
+  if(gained>0){
+    closeSheet(); chime();
+    toast.textContent=`PAYMENT RECEIVED · +${gained} DEGEN COIN${gained>1?'S':''}`;
+    toast.classList.remove('go'); void toast.offsetWidth; toast.classList.add('go');
+    setTimeout(()=>toast.classList.remove('go'), 3600);
+  }
+});
 
 /* first tap on coin → deposit */
 coinWrap.onclick=()=>{ if(flipping) return; balance<wager ? openSheet() : doToss(); };
@@ -838,10 +886,10 @@ function doToss(){
   if(flipping || balance<wager) return;
   flipping=true;
   stage.classList.remove('idle'); stage.classList.add('flipping');
-  setBalance(balance - wager, false); balanceEl.textContent=''+balance;
+  /* nothing is taken up front — the whole ±wager settles at the reveal */
 
-  /* 55% chance the player's pick hits — odds tilted to the player */
-  const win = Math.random() < 0.55;
+  /* 45% chance the player's pick hits, 55% the house takes it */
+  const win = Math.random() < 0.45;
   const result = win ? side : (side==='heads' ? 'tails' : 'heads');
   const spins = 6 + Math.floor(Math.random()*3);
   const current = rot % 360;
@@ -926,9 +974,10 @@ function reveal(result){
   verdict.classList.remove('out','go'); void verdict.offsetWidth; verdict.classList.add('go');
   if(win) setTimeout(()=>countPayout(wager), 300);
 
-  /* winnings fly into the bank, then the balance counts up */
+  /* win: coins fly into the bank, then the balance counts UP by the wager;
+     loss: the balance drops by the wager at the moment of impact */
   if(win){
-    pendingCredit = wager*2;
+    pendingCredit = wager;
     const credit = ()=>{ if(!pendingCredit) return; const amt=pendingCredit; pendingCredit=0; setBalance(balance + amt); };
     if(reduced){ setTimeout(credit, 350); }
     else setTimeout(()=>flyToBank(Math.min(10, 4+Math.ceil(wager/4)), ()=>{
@@ -936,6 +985,8 @@ function reveal(result){
       const r=bank.getBoundingClientRect();
       spawnStars(8, r.left+r.width/2, r.top+r.height/2, 80);
     }), 500);
+  } else {
+    setTimeout(()=>setBalance(balance - wager), 350);
   }
 
   const hold = win ? 4400 : 2100; /* wins party longer */
