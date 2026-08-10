@@ -250,16 +250,13 @@ header{width:100%;display:flex;align-items:flex-end;justify-content:space-betwee
   transition:all .15s;
 }
 .wg.sel{color:var(--gold-1);border-color:var(--gold-2);background:rgba(245,208,97,.1);box-shadow:0 0 16px rgba(245,208,97,.18) inset}
-.toss{
-  font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:.34em;text-indent:.34em;
-  padding:18px 0 14px;border-radius:18px;border:none;cursor:pointer;
-  color:#231604;
-  background:linear-gradient(180deg,#fff3c4,#f5d061 40%,#c9931a);
-  box-shadow:0 10px 34px rgba(212,160,32,.45), inset 0 2px 0 #fffce9, inset 0 -3px 0 rgba(122,84,16,.6);
-  transition:transform .12s, filter .2s, opacity .2s;
+.hint{
+  text-align:center;font-family:'Bebas Neue',sans-serif;font-size:15px;
+  letter-spacing:.34em;text-indent:.34em;min-height:34px;padding:10px 0 6px;
+  color:var(--gold-2);opacity:.8;
+  animation:hintPulse 2.6s ease-in-out infinite;
 }
-.toss:active{transform:translateY(2px)}
-.toss:disabled{opacity:.35;filter:saturate(.4);cursor:not-allowed;box-shadow:none}
+@keyframes hintPulse{50%{opacity:.35}}
 
 /* ── deposit sheet ── */
 .scrim{
@@ -443,7 +440,7 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:25}
         <button class="wg" data-w="20">20</button>
       </div>
     </div>
-    <button class="toss" id="toss" disabled>TOSS</button>
+    <div class="hint" id="hint">TAP THE COIN TO TOSS</div>
   </div>
 </div>
 
@@ -465,14 +462,14 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:25}
     <button class="chip" data-amt="20"><span>$20</span></button>
   </div>
   <p class="fine">$1 = 1 Degen Coin. Degen Coins are for play only — they never convert
-  back to cash and can't be withdrawn. Every flip pays 2× on a 40% win chance.
-  The house keeps the edge; that's the degen part.</p>
+  back to cash and can't be withdrawn. Every flip pays 2× on a 55% win chance —
+  the odds are tilted in your favor.</p>
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
 const stage=$('stage'), coin=$('coin'), hop=$('hop'), coinWrap=$('coinWrap');
-const balanceEl=$('balance'), bank=$('bank'), toss=$('toss');
+const balanceEl=$('balance'), bank=$('bank'), hint=$('hint');
 const sheet=$('sheet'), scrim=$('scrim'), flash=$('flash'), ring=$('ring');
 const verdict=$('verdict'), verdictWord=$('verdictWord'), verdictPay=$('verdictPay');
 const shadow=$('coinShadow'), strobe=$('strobe'), tint=$('tint'), rays=$('rays'), muteBtn=$('mute');
@@ -480,6 +477,7 @@ const edgeglow=$('edgeglow'), toast=$('toast'), bannerText=$('bannerText');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 let balance=0, wager=1, side='heads', rot=0, flipping=false;
+let pendingCredit=0; /* win amount owed while the coin-flight animation plays */
 
 /* ── STRIPE SETUP (no backend needed) ────────────────────────────
    1. dashboard.stripe.com → Payment Links → "+ New" → create 4
@@ -488,7 +486,7 @@ let balance=0, wager=1, side='heads', rot=0, flipping=false;
    2. On each link → "After payment" tab → "Don't show confirmation
       page" → "Redirect customers to your website" → the URL where
       this page is hosted, with the coin amount appended:
-         https://yoursite.com/?coins=5      (match each product)
+         https://degen.voyage/?coins=5      (match each product)
       Use the EXACT domain players visit (www vs no-www matters —
       localStorage doesn't cross origins, the balance would vanish).
    3. Paste the 4 buy.stripe.com URLs into PAY_LINKS below.
@@ -503,20 +501,26 @@ let balance=0, wager=1, side='heads', rot=0, flipping=false;
    Honor-system caveat: with no server, ?coins=N typed by hand also
    credits. Fine for an arcade toy; a webhook backend fixes it.     */
 const PAY_LINKS = {
-  1:  '',   /* e.g. 'https://buy.stripe.com/xxxx' */
-  5:  '',
+  1:  'https://buy.stripe.com/test_cNi6oH5wkb7QaDNaKUd3i00', /* TEST-MODE — swap for live link */
+  5:  '',   /* paste buy.stripe.com links as you create them */
   10: '',
   20: ''
 };
 /* safe storage: works when hosted; silently skipped in sandboxed previews */
 function saveBal(){ try{ localStorage.setItem('degen_bal', balance); }catch(e){} }
+/* if the tab closes mid-celebration, bank the win before the animation finishes */
+addEventListener('pagehide', ()=>{ if(pendingCredit){ balance+=pendingCredit; pendingCredit=0; saveBal(); } });
 function loadBal(){ try{ return Math.max(0, +localStorage.getItem('degen_bal') || 0); }catch(e){ return 0; } }
 
 /* ── balance ── */
 balance=loadBal(); 
+/* the coin itself is the toss button — the hint says what a tap will do */
+function updateHint(){
+  hint.textContent = flipping ? '' : (balance < wager ? 'TAP THE COIN TO BUY COINS' : 'TAP THE COIN TO TOSS');
+}
 function setBalance(v, animate=true){
   const from=balance; balance=v; saveBal();
-  toss.disabled = flipping || balance < wager;
+  updateHint();
   if(!animate || reduced){ balanceEl.textContent=''+balance; return; }
   const t0=performance.now(), dur=600;
   (function tick(t){
@@ -527,7 +531,7 @@ function setBalance(v, animate=true){
   bank.classList.remove('pulse'); void bank.offsetWidth; bank.classList.add('pulse');
 }
 balanceEl.textContent=''+balance;
-toss.disabled = balance < wager;
+updateHint();
 
 /* ── deposit sheet ── */
 const linksReady = Object.values(PAY_LINKS).some(v=>v);
@@ -574,7 +578,7 @@ document.querySelectorAll('.wg').forEach(b=>{
     if(flipping) return;
     document.querySelectorAll('.wg').forEach(x=>x.classList.remove('sel'));
     b.classList.add('sel'); wager=+b.dataset.w;
-    toss.disabled = flipping || balance < wager;
+    updateHint();
   };
 });
 
@@ -720,10 +724,12 @@ function fireworkShow(){
 })();
 
 /* ── music + sfx (synthesized, no files) ── */
-let AC=null, master=null, musicOn=true, musicNodes=[], schedTimer=null;
+let AC=null, master=null, musicBus=null, musicOn=true, schedTimer=null;
 function audio(){
   if(!AC){ AC=new (window.AudioContext||window.webkitAudioContext)();
-    master=AC.createGain(); master.gain.value=.5; master.connect(AC.destination); }
+    master=AC.createGain(); master.gain.value=.5; master.connect(AC.destination);
+    /* music gets its own bus so mute can cut already-scheduled notes instantly */
+    musicBus=AC.createGain(); musicBus.gain.value=1; musicBus.connect(master); }
   if(AC.state==='suspended') AC.resume();
   return AC;
 }
@@ -735,14 +741,14 @@ function tone(freq, t0, dur, type='sine', vol=.2, dest=master){
   g.gain.exponentialRampToValueAtTime(.0001,t0+dur);
   o.connect(g); g.connect(dest); o.start(t0); o.stop(t0+dur+.05);
 }
-function noise(t0, dur, vol=.15, hp=6000){
+function noise(t0, dur, vol=.15, hp=6000, dest=master){
   const len=AC.sampleRate*dur, buf=AC.createBuffer(1,len,AC.sampleRate), d=buf.getChannelData(0);
   for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
   const s=AC.createBufferSource(); s.buffer=buf;
   const f=AC.createBiquadFilter(); f.type='highpass'; f.frequency.value=hp;
   const g=AC.createGain();
   g.gain.setValueAtTime(vol,t0); g.gain.exponentialRampToValueAtTime(.0001,t0+dur);
-  s.connect(f); f.connect(g); g.connect(master); s.start(t0);
+  s.connect(f); f.connect(g); g.connect(dest); s.start(t0);
 }
 /* looping lounge groove: swung bass + hats + sparkle arp, A minor */
 const BPM=104, BEAT=60/BPM;
@@ -756,19 +762,21 @@ function scheduleBar(t0){
     if(b%4===0){ const o=AC.createOscillator(),g=AC.createGain();
       o.frequency.setValueAtTime(120,t); o.frequency.exponentialRampToValueAtTime(40,t+.12);
       g.gain.setValueAtTime(.5,t); g.gain.exponentialRampToValueAtTime(.001,t+.22);
-      o.connect(g); g.connect(master); o.start(t); o.stop(t+.25); }
+      o.connect(g); g.connect(musicBus); o.start(t); o.stop(t+.25); }
     /* hats every 8th, accented offbeats */
-    noise(t, .04, b%2? .07:.035, 8000);
+    noise(t, .04, b%2? .07:.035, 8000, musicBus);
     /* bass */
-    tone(bassLine[b], t, BEAT*.42, 'triangle', .22);
+    tone(bassLine[b], t, BEAT*.42, 'triangle', .22, musicBus);
     /* sparkle arp every other bar */
-    if(bar%2===1) tone(arp[b]* (bar%4===3?1.5:1), t, .3, 'sine', .05);
+    if(bar%2===1) tone(arp[b]* (bar%4===3?1.5:1), t, .3, 'sine', .05, musicBus);
   }
   bar++;
 }
 function startMusic(){
   if(!musicOn || reduced) return;
   audio();
+  musicBus.gain.cancelScheduledValues(AC.currentTime);
+  musicBus.gain.setValueAtTime(1, AC.currentTime);
   const barLen=BEAT*4;
   let next=AC.currentTime+.05;
   scheduleBar(next);
@@ -777,7 +785,14 @@ function startMusic(){
     while(next+barLen < AC.currentTime+barLen*1.5){ next+=barLen; scheduleBar(next); }
   }, 200);
 }
-function stopMusic(){ clearInterval(schedTimer); schedTimer=null; }
+function stopMusic(){
+  clearInterval(schedTimer); schedTimer=null;
+  /* kill notes already scheduled ahead, not just future bars */
+  if(AC && musicBus){
+    musicBus.gain.cancelScheduledValues(AC.currentTime);
+    musicBus.gain.setValueAtTime(0, AC.currentTime);
+  }
+}
 muteBtn.onclick=()=>{
   musicOn=!musicOn;
   muteBtn.classList.toggle('off',!musicOn);
@@ -823,11 +838,10 @@ function doToss(){
   if(flipping || balance<wager) return;
   flipping=true;
   stage.classList.remove('idle'); stage.classList.add('flipping');
-  toss.disabled=true;
   setBalance(balance - wager, false); balanceEl.textContent=''+balance;
 
-  /* 40% chance the player's pick hits */
-  const win = Math.random() < 0.4;
+  /* 55% chance the player's pick hits — odds tilted to the player */
+  const win = Math.random() < 0.55;
   const result = win ? side : (side==='heads' ? 'tails' : 'heads');
   const spins = 6 + Math.floor(Math.random()*3);
   const current = rot % 360;
@@ -856,7 +870,6 @@ function doToss(){
 
   setTimeout(()=>reveal(result), dur*1000);
 }
-toss.onclick=doToss;
 
 /* staggered shockwave rings */
 const rings=[ring, $('ring2'), $('ring3')];
@@ -915,9 +928,11 @@ function reveal(result){
 
   /* winnings fly into the bank, then the balance counts up */
   if(win){
-    if(reduced){ setTimeout(()=>setBalance(balance + wager*2), 350); }
+    pendingCredit = wager*2;
+    const credit = ()=>{ if(!pendingCredit) return; const amt=pendingCredit; pendingCredit=0; setBalance(balance + amt); };
+    if(reduced){ setTimeout(credit, 350); }
     else setTimeout(()=>flyToBank(Math.min(10, 4+Math.ceil(wager/4)), ()=>{
-      setBalance(balance + wager*2);
+      credit();
       const r=bank.getBoundingClientRect();
       spawnStars(8, r.left+r.width/2, r.top+r.height/2, 80);
     }), 500);
@@ -930,7 +945,7 @@ function reveal(result){
     banner.classList.remove('go');
     flipping=false;
     stage.classList.remove('flipping','win'); stage.classList.add('idle');
-    toss.disabled = balance < wager;
+    updateHint();
   }, hold);
 }
 </script>
