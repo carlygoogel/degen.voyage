@@ -512,11 +512,11 @@ let pendingCredit=0; /* win amount owed while the coin-flight animation plays */
    Degen Coins never convert back to dollars — play money only.
    Honor-system caveat: with no server, ?coins=N typed by hand also
    credits. Fine for an arcade toy; a webhook backend fixes it.     */
-const PAY_LINKS = {
-  1:  'https://buy.stripe.com/test_cNi6oH5wkb7QaDNaKUd3i00', /* TEST-MODE — swap all 4 for live links */
-  5:  'https://buy.stripe.com/test_6oUfZh2k80tccLV5qAd3i01',
-  10: 'https://buy.stripe.com/test_5kQ28r8IwdfY5jtbOYd3i02',
-  20: 'https://buy.stripe.com/test_fZu8wPgaYcbU3bl06gd3i03'
+const PAY_LINKS = {  /* LIVE links — real charges */
+  1:  'https://buy.stripe.com/cNi6oH5wkb7QaDNaKUd3i00',
+  5:  'https://buy.stripe.com/6oUfZh2k80tccLV5qAd3i01',
+  10: 'https://buy.stripe.com/5kQ28r8IwdfY5jtbOYd3i02',
+  20: 'https://buy.stripe.com/fZu8wPgaYcbU3bl06gd3i03'
 };
 
 /* ── POSTHOG ANALYTICS ───────────────────────────────────────────
