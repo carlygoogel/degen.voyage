@@ -541,7 +541,7 @@ const PAY_LINKS = {  /* LIVE links — real charges (popup fallback path) */
    this file (download the repo branch as ZIP and drop that folder).
    While the key below is empty or the backend errors, chips
    automatically fall back to the payment-link popup above.          */
-const STRIPE_PK = '';
+const STRIPE_PK = 'pk_live_51U2iAyE6rLwqEJikQwLe00L6Jw7NiWkXqeaOan0J0Erf7Iz5bihW1R93fk19EvsBQaPHYWik853gfGP0AWihSQ7U00Ran5zGYD';
 
 /* ── POSTHOG ANALYTICS ───────────────────────────────────────────
    Live with the project key. POSTHOG_HOST points at PostHog's US
@@ -606,6 +606,7 @@ function loadStripeJs(){
     s.onload=res; s.onerror=()=>{ stripeJs=null; rej(new Error('stripe.js failed')); };
     document.head.appendChild(s);
   });
+  stripeJs.catch(()=>{}); /* pre-warm callers may ignore a failed load */
   return stripeJs;
 }
 function resetCheckoutUI(){
