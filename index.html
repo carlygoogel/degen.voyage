@@ -287,6 +287,14 @@ header{width:100%;display:flex;align-items:flex-end;justify-content:space-betwee
   transform:translateY(110%);transition:transform .42s cubic-bezier(.22,1.2,.3,1);
 }
 .sheet.open{transform:translateY(0)}
+.sheet{max-height:90dvh;overflow-y:auto}
+.backbtn{
+  background:none;border:none;cursor:pointer;padding:0 0 12px;
+  font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;
+  color:var(--dim);
+}
+#checkoutMount{min-height:430px;border-radius:14px;overflow:hidden;background:#fff}
+.chip.busy{opacity:.45;pointer-events:none}
 .sheet h2{font-family:'Bebas Neue';font-size:30px;letter-spacing:.16em;color:var(--gold-2)}
 .sheet p{font-size:12px;color:var(--dim);margin:6px 0 20px;letter-spacing:.06em}
 .chips{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
@@ -465,11 +473,15 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:25}
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet">
   <h2>BUY DEGEN COINS</h2>
-  <div class="chips">
+  <div class="chips" id="chipsGrid">
     <button class="chip" data-amt="1"><span>$1</span></button>
     <button class="chip" data-amt="5"><span>$5</span></button>
     <button class="chip" data-amt="10"><span>$10</span></button>
     <button class="chip" data-amt="20"><span>$20</span></button>
+  </div>
+  <div id="checkoutBox" hidden>
+    <button class="backbtn" id="backToChips">‹ BACK</button>
+    <div id="checkoutMount"></div>
   </div>
   <p class="fine">$1 = 1 Degen Coin. Play money only — Degen Coins never convert
   back to cash.</p>
@@ -512,12 +524,24 @@ let pendingCredit=0; /* win amount owed while the coin-flight animation plays */
    Degen Coins never convert back to dollars — play money only.
    Honor-system caveat: with no server, ?coins=N typed by hand also
    credits. Fine for an arcade toy; a webhook backend fixes it.     */
-const PAY_LINKS = {  /* LIVE links — real charges */
+const PAY_LINKS = {  /* LIVE links — real charges (popup fallback path) */
   1:  'https://buy.stripe.com/cNi6oH5wkb7QaDNaKUd3i00',
   5:  'https://buy.stripe.com/6oUfZh2k80tccLV5qAd3i01',
   10: 'https://buy.stripe.com/5kQ28r8IwdfY5jtbOYd3i02',
   20: 'https://buy.stripe.com/fZu8wPgaYcbU3bl06gd3i03'
 };
+
+/* ── EMBEDDED CHECKOUT (card form right on this page, no redirect) ──
+   Two-part setup:
+   1. Netlify → Site configuration → Environment variables → add
+      STRIPE_SECRET_KEY = sk_live_...   (Stripe → Developers → API
+      keys). NEVER put the secret key in this file.
+   2. Paste your PUBLISHABLE key (pk_live_..., the public one) below.
+   Deploy must include netlify.toml + netlify/functions/ alongside
+   this file (download the repo branch as ZIP and drop that folder).
+   While the key below is empty or the backend errors, chips
+   automatically fall back to the payment-link popup above.          */
+const STRIPE_PK = 'pk_live_51U2iAyE6rLwqEJikQwLe00L6Jw7NiWkXqeaOan0J0Erf7Iz5bihW1R93fk19EvsBQaPHYWik853gfGP0AWihSQ7U00Ran5zGYD';
 
 /* ── POSTHOG ANALYTICS ───────────────────────────────────────────
    Live with the project key. POSTHOG_HOST points at PostHog's US
@@ -566,22 +590,90 @@ function setBalance(v, animate=true){
 balanceEl.textContent=''+balance;
 
 /* ── deposit sheet ── */
-function openSheet(){ sheet.classList.add('open'); scrim.classList.add('open'); track('deposit_sheet_opened', {balance}); }
-function closeSheet(){ sheet.classList.remove('open'); scrim.classList.remove('open'); }
+function openSheet(){ sheet.classList.add('open'); scrim.classList.add('open'); if(STRIPE_PK) loadStripeJs(); track('deposit_sheet_opened', {balance}); }
+function closeSheet(){ resetCheckoutUI(); sheet.classList.remove('open'); scrim.classList.remove('open'); }
 scrim.onclick=closeSheet;
 bank.onclick=openSheet;
+
+/* ── buying coins: embedded checkout with popup fallback ── */
+const chipsGrid=$('chipsGrid'), checkoutBox=$('checkoutBox'), checkoutMount=$('checkoutMount');
+let currentCheckout=null, stripeJs=null;
+function loadStripeJs(){
+  if(stripeJs) return stripeJs;
+  stripeJs=new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://js.stripe.com/v3/'; s.async=true;
+    s.onload=res; s.onerror=()=>{ stripeJs=null; rej(new Error('stripe.js failed')); };
+    document.head.appendChild(s);
+  });
+  stripeJs.catch(()=>{}); /* pre-warm callers may ignore a failed load */
+  return stripeJs;
+}
+function resetCheckoutUI(){
+  if(currentCheckout){ try{ currentCheckout.destroy(); }catch(e){} currentCheckout=null; }
+  checkoutBox.hidden=true; chipsGrid.style.display='';
+  checkoutMount.innerHTML='';
+}
+$('backToChips').onclick=resetCheckoutUI;
+function creditPurchase(coins){
+  setBalance(balance + coins); chime();
+  toast.textContent=`PAYMENT RECEIVED · +${coins} DEGEN COIN${coins>1?'S':''}`;
+  toast.classList.remove('go'); void toast.offsetWidth; toast.classList.add('go');
+  setTimeout(()=>toast.classList.remove('go'), 3600);
+  track('coins_purchased', {coins, method:'embedded'});
+}
+async function embeddedCheckout(amt){
+  const jsReady=loadStripeJs();
+  const res=await fetch('/api/create-checkout-session', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({coins:amt})
+  });
+  if(!res.ok) throw new Error('session endpoint '+res.status);
+  const {clientSecret}=await res.json();
+  if(!clientSecret) throw new Error('no client secret');
+  await jsReady;
+  const sessionId=clientSecret.split('_secret')[0];
+  const checkout=await Stripe(STRIPE_PK).initEmbeddedCheckout({
+    clientSecret,
+    onComplete: async ()=>{
+      let coins=amt;
+      try{ /* confirm with the backend that this session really paid */
+        const v=await fetch('/api/session-status?session_id='+encodeURIComponent(sessionId)).then(r=>r.json());
+        if(v && v.status==='complete') coins=v.coins||amt; else return;
+      }catch(e){}
+      resetCheckoutUI();
+      creditPurchase(coins);
+      setTimeout(closeSheet, 700);
+    }
+  });
+  currentCheckout=checkout;
+  chipsGrid.style.display='none'; checkoutBox.hidden=false;
+  checkout.mount('#checkoutMount');
+}
+function popupFlow(amt){
+  const link=PAY_LINKS[amt];
+  if(link){
+    saveBal(); awaitingPurchase=true;
+    /* checkout in a popup keeps the table alive behind it */
+    const w=window.open(link, 'degen_pay', 'popup,width=480,height=780');
+    track('checkout_opened', {usd: amt, method: w?'popup':'redirect'});
+    if(!w) location.href=link; /* popup blocked → classic same-tab redirect */
+    return;
+  }
+  setBalance(balance + amt); closeSheet(); chime();  /* demo mode when no link set */
+}
 document.querySelectorAll('.chip').forEach(c=>{
   c.onclick=()=>{
-    const amt=+c.dataset.amt, link=PAY_LINKS[amt];
-    if(link){
-      saveBal(); awaitingPurchase=true;
-      /* checkout in a popup keeps the table alive behind it */
-      const w=window.open(link, 'degen_pay', 'popup,width=480,height=780');
-      track('checkout_opened', {usd: amt, popup: !!w});
-      if(!w) location.href=link; /* popup blocked → classic same-tab redirect */
+    const amt=+c.dataset.amt;
+    if(STRIPE_PK){
+      c.classList.add('busy');
+      track('checkout_opened', {usd: amt, method:'embedded'});
+      embeddedCheckout(amt)
+        .catch(()=>popupFlow(amt))  /* backend not ready → payment-link popup */
+        .finally(()=>c.classList.remove('busy'));
       return;
     }
-    setBalance(balance + amt); closeSheet(); chime();  /* demo mode when no link set */
+    popupFlow(amt);
   };
 });
 /* returning from Stripe: credit purchased Degen Coins */
