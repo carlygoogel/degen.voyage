@@ -33,6 +33,7 @@ body{
   background:var(--ink);
   color:var(--text);
   overflow:hidden;
+  -webkit-user-select:none;
   user-select:none;
   overscroll-behavior:none;
 }
@@ -48,6 +49,7 @@ body{
   content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
   background-image:radial-gradient(rgba(255,243,196,.04) 1px, transparent 1px);
   background-size:26px 26px;
+  -webkit-mask-image:radial-gradient(80% 70% at 50% 45%, #000 30%, transparent 100%);
   mask-image:radial-gradient(80% 70% at 50% 45%, #000 30%, transparent 100%);
 }
 .stage{
@@ -394,13 +396,36 @@ header{width:100%;display:flex;align-items:flex-end;justify-content:space-betwee
   100%{transform:translate(-50%,-46%) perspective(700px) rotateY(720deg)}
 }
 
-/* ── entangled orbs in the felt ── */
+/* ── two entangled coins, spinning in anti-phase, flanking the table ── */
 .orb{
-  position:fixed;z-index:2;border:none;padding:0;cursor:pointer;border-radius:50%;
-  background:radial-gradient(circle at 38% 35%, #fff3c4 0%, #f5d061 32%, rgba(201,147,26,.55) 58%, transparent 72%);
-  filter:drop-shadow(0 0 16px rgba(245,208,97,.6));
-  animation:orbFloat 5.5s ease-in-out infinite;
+  position:fixed;z-index:2;border:none;padding:0;cursor:pointer;background:none;
+  width:44px;height:44px;top:16vh;
+  filter:drop-shadow(0 0 18px rgba(245,208,97,.8)) drop-shadow(0 0 9px rgba(167,139,255,.45));
+  opacity:0;pointer-events:none;transition:opacity .45s;
   -webkit-tap-highlight-color:transparent;
+}
+.orb.show{
+  opacity:1;pointer-events:auto;
+  animation:orbIn .55s cubic-bezier(.2,1.3,.4,1), orbFloat 5.5s ease-in-out .55s infinite;
+}
+@keyframes orbIn{from{opacity:0;transform:scale(.4) translateY(12px)}}
+.orb.o1{left:calc(50% - min(44vw, 225px))}
+.orb.o2{left:calc(50% + min(44vw, 225px) - 44px)}
+.orb.o2.show{animation-delay:0s, 2s}
+.orb .mcoin{ /* a miniature Degen Coin */
+  display:flex;align-items:center;justify-content:center;
+  width:100%;height:100%;border-radius:50%;
+  font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:17px;font-style:normal;
+  color:#8a6210;text-shadow:0 1px 0 #ffefad;
+  background:radial-gradient(circle at 35% 30%, #ffe9a0 0%, #f0c94e 42%, #d4a428 68%, #b8860b 100%);
+  box-shadow:inset 0 0 0 2px #c9931a, inset 0 0 0 3px #f7dd7e,
+             inset 0 -4px 7px rgba(90,60,8,.4), inset 0 3px 6px rgba(255,248,214,.45);
+  animation:entSpin 2.6s linear infinite;
+}
+.orb.o2 .mcoin{animation-delay:-1.3s} /* its twin is edge-on exactly when this one faces you */
+@keyframes entSpin{
+  0%,50%,100%{transform:scaleX(1)}
+  25%,75%{transform:scaleX(.1)}
 }
 .orb::before,.orb::after{ /* electron rings */
   content:"";position:absolute;inset:-26%;border-radius:50%;
@@ -413,15 +438,13 @@ header{width:100%;display:flex;align-items:flex-end;justify-content:space-betwee
   animation-duration:11s;animation-direction:reverse;
 }
 @keyframes orbRing{to{transform:rotateX(66deg) rotate(372deg)}}
-@keyframes orbFloat{50%{transform:translateY(-9px)}}
-.orb.o1{left:6%;top:13vh;width:42px;height:42px}
-.orb.o2{right:5%;top:30vh;width:62px;height:62px;animation-delay:1.2s}
-.orb.hot{filter:drop-shadow(0 0 26px rgba(245,208,97,.95)) drop-shadow(0 0 12px rgba(167,139,255,.6))}
+@keyframes orbFloat{50%{transform:translateY(-5px)}}
 
 /* ── the entangled deal ── */
 .dealwrap{
   position:fixed;inset:0;z-index:55;display:flex;align-items:center;justify-content:center;
-  background:rgba(4,3,7,.72);backdrop-filter:blur(6px);
+  background:rgba(4,3,7,.72);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
 }
 .dealwrap[hidden]{display:none}
 .deal{
@@ -534,7 +557,8 @@ header{width:100%;display:flex;align-items:flex-end;justify-content:space-betwee
 
 /* ── deposit sheet ── */
 .scrim{
-  position:fixed;inset:0;background:rgba(4,3,7,.72);backdrop-filter:blur(6px);
+  position:fixed;inset:0;background:rgba(4,3,7,.72);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
   opacity:0;pointer-events:none;transition:opacity .3s;z-index:40;
 }
 .scrim.open{opacity:1;pointer-events:auto}
@@ -664,8 +688,8 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:25}
 </head>
 <body>
 <div class="table"></div>
-<button class="orb o1" aria-label="Entangled orb"></button>
-<button class="orb o2" aria-label="Entangled orb"></button>
+<button class="orb o1" aria-label="Entangled coin"><i class="mcoin">ψ</i></button>
+<button class="orb o2" aria-label="Entangled coin"><i class="mcoin">ψ</i></button>
 <canvas id="fx"></canvas>
 <div class="flash" id="flash"></div>
 <div class="strobe" id="strobe"></div>
@@ -791,6 +815,7 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let balance=0, wager=1, side='heads', rot=0, flipping=false;
 let pendingCredit=0; /* win amount owed while the coin-flight animation plays */
 let boxed=false; /* a flipped coin sits in the box in genuine superposition */
+let dealPicking=false, dealYourFace=null, orbTimer=null;
 const box=$('box'), boxLabel=$('boxLabel'), qmath=$('qmath'), coach=$('coach'), qtip=$('qtip');
 /* the little i: tap to read how observation odds work, tap anywhere to dismiss */
 $('qinfo').onclick=(e)=>{ e.stopPropagation(); qtip.classList.toggle('show'); };
@@ -1007,7 +1032,7 @@ document.querySelectorAll('.wg').forEach(b=>{
       }
       boxed=true;
       stage.classList.remove('idle'); stage.classList.add('boxed');
-      updateQmath(); syncOrbs();
+      updateQmath(); scheduleOrbs();
     }
   }catch(e){}
 })();
@@ -1043,21 +1068,23 @@ setTimeout(()=>{
 }, 900);
 
 /* ── the entangled deal: orbs in the felt, a twin box on offer ── */
-let dealPicking=false, dealYourFace=null;
 const dealWrap=$('dealWrap');
-function syncOrbs(){ document.querySelectorAll('.orb').forEach(o=>o.classList.toggle('hot', boxed && !flipping)); }
+/* the entangled coins materialize a few seconds after a box seals;
+   passing on the deal makes them vanish until the next flip */
+function showOrbs(){ if(!boxed) return; document.querySelectorAll('.orb').forEach(o=>o.classList.add('show')); entChime(); }
+function hideOrbs(){ clearTimeout(orbTimer); orbTimer=null; document.querySelectorAll('.orb').forEach(o=>o.classList.remove('show')); }
+function scheduleOrbs(){ clearTimeout(orbTimer); orbTimer=setTimeout(showOrbs, 5000); }
 function entChime(){ if(!musicOn)return; audio(); const t=AC.currentTime;
   tone(660,t,.5,'sine',.09); tone(664,t,.5,'sine',.09); /* two detuned notes beating: entanglement */
   tone(1320,t+.12,.3,'sine',.05); }
 document.querySelectorAll('.orb').forEach(o=>{
   o.onclick=()=>{
-    if(flipping || dealPicking) return;
-    if(!boxed){ coachAt(coinWrap,'FLIP FIRST'); setTimeout(coachHide,1200); return; }
-    entChime(); dealWrap.hidden=false;
+    if(flipping || dealPicking || !boxed) return;
+    dealWrap.hidden=false;
     track('entangled_deal_offered', {balance});
   };
 });
-$('dealPass').onclick=()=>{ dealWrap.hidden=true; };
+$('dealPass').onclick=()=>{ dealWrap.hidden=true; hideOrbs(); };
 dealWrap.onclick=(e)=>{ if(e.target===dealWrap) dealWrap.hidden=true; };
 $('dealTake').onclick=()=>{
   if(balance<100){ dealWrap.hidden=true; openSheet(); return; }
@@ -1065,7 +1092,7 @@ $('dealTake').onclick=()=>{
 };
 function startDeal(){
   if(flipping || !boxed) return;
-  boxed=false; flipping=true; clearBox(); coachDone(); syncOrbs();
+  boxed=false; flipping=true; clearBox(); coachDone(); hideOrbs();
   stage.classList.remove('boxed'); stage.classList.add('flipping','revealing');
   track('entangled_deal_taken', {balance});
   dealYourFace = Math.random()<.5 ? 'heads' : 'tails';
@@ -1148,33 +1175,36 @@ function resolveTwin(){
 const fx=$('fx'), ctx=fx.getContext('2d');
 function fit(){ fx.width=innerWidth*devicePixelRatio; fx.height=innerHeight*devicePixelRatio; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); }
 fit(); addEventListener('resize',fit);
-/* the thread of light between the entangled orbs */
-let orbPts=null;
+/* the thread of light between the entangled coins — anchored, no wandering */
+let orbPts=null, orbEl=null, threadAlpha=0;
 function cacheOrbs(){
   const a=document.querySelector('.orb.o1'), b=document.querySelector('.orb.o2');
   if(!a||!b) return;
+  orbEl=a;
   const ra=a.getBoundingClientRect(), rb=b.getBoundingClientRect();
   orbPts={x1:ra.left+ra.width/2, y1:ra.top+ra.height/2, x2:rb.left+rb.width/2, y2:rb.top+rb.height/2};
 }
 cacheOrbs(); addEventListener('resize',cacheOrbs);
 function drawThread(t){
   if(!orbPts) return;
-  const hot=stage.classList.contains('boxed');
-  const mx=(orbPts.x1+orbPts.x2)/2 + Math.sin(t*1.3)*16;
-  const my=(orbPts.y1+orbPts.y2)/2 + Math.cos(t*1.7)*12;
+  const shown = orbEl && orbEl.classList.contains('show');
+  threadAlpha += ((shown?1:0)-threadAlpha)*.06; /* fades in and out with the coins */
+  if(threadAlpha<.02) return;
+  const mx=(orbPts.x1+orbPts.x2)/2;
+  const my=(orbPts.y1+orbPts.y2)/2 + 10 + Math.sin(t*1.6)*5; /* gentle sag, no drift */
   ctx.save();
-  ctx.globalAlpha = hot ? .45+.2*Math.sin(t*3) : .18+.07*Math.sin(t*2);
+  ctx.globalAlpha=threadAlpha*(.5+.18*Math.sin(t*3));
   const g=ctx.createLinearGradient(orbPts.x1,orbPts.y1,orbPts.x2,orbPts.y2);
   g.addColorStop(0,'#f5d061'); g.addColorStop(.5,'#a78bff'); g.addColorStop(1,'#f5d061');
-  ctx.strokeStyle=g; ctx.lineWidth=hot?2:1.2;
+  ctx.strokeStyle=g; ctx.lineWidth=2;
   ctx.beginPath(); ctx.moveTo(orbPts.x1,orbPts.y1);
   ctx.quadraticCurveTo(mx,my,orbPts.x2,orbPts.y2); ctx.stroke();
   /* a spark riding the thread */
   const u=(Math.sin(t*.9)+1)/2, v=1-u;
   const sx=v*v*orbPts.x1+2*v*u*mx+u*u*orbPts.x2, sy=v*v*orbPts.y1+2*v*u*my+u*u*orbPts.y2;
-  ctx.globalAlpha=(hot?.9:.4)*(.6+.4*Math.sin(t*7));
+  ctx.globalAlpha=threadAlpha*.85*(.6+.4*Math.sin(t*7));
   ctx.fillStyle='#fff3c4';
-  ctx.beginPath(); ctx.arc(sx,sy,hot?2.6:1.8,0,7); ctx.fill();
+  ctx.beginPath(); ctx.arc(sx,sy,2.4,0,7); ctx.fill();
   ctx.restore();
 }
 let parts=[], dust=[];
@@ -1473,7 +1503,7 @@ function loseThud(){ if(!musicOn)return; audio(); const t=AC.currentTime;
 function doFlip(){
   if(flipping || boxed) return;
   flipping=true;
-  coachHide();
+  coachHide(); hideOrbs();
   stage.classList.remove('idle'); stage.classList.add('flipping');
   coinWrap.getAnimations().forEach(a=>a.cancel());
 
@@ -1544,7 +1574,7 @@ function doFlip(){
     flipping=false; boxed=true;
     stage.classList.remove('flipping','boxing'); stage.classList.add('boxed');
     box.classList.remove('enter','slam','spinshine');
-    updateQmath(); saveBox(); syncOrbs();
+    updateQmath(); saveBox(); scheduleOrbs();
     if(!reduced) for(let i=0;i<5;i++) spawnGlyph();
     boxCaptions();
     track('coin_boxed', {side, wager});
@@ -1564,7 +1594,7 @@ function doReveal(){
   const win = Math.random() < tier.p;
   const result = win ? side : (side==='heads' ? 'tails' : 'heads');
 
-  boxed=false; flipping=true; clearBox(); coachDone(); syncOrbs();
+  boxed=false; flipping=true; clearBox(); coachDone(); hideOrbs();
   stage.classList.remove('boxed'); stage.classList.add('flipping','revealing');
 
   /* the superposition tears: aura flickers between outcomes, math scrambles */
@@ -1692,7 +1722,6 @@ function reveal(result, deal){
     banner.classList.remove('go');
     flipping=false;
     stage.classList.remove('flipping','win'); stage.classList.add('idle');
-    syncOrbs();
   }, hold);
 }
 </script>
