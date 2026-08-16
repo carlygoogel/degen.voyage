@@ -614,8 +614,9 @@ header{width:100%;display:flex;align-items:flex-end;justify-content:space-betwee
 }
 .chip:active{transform:scale(.9) rotate(-8deg)}
 .chip span{position:relative;text-shadow:0 1px 0 #ffefad}
-/* the $100 Ultimate Degen Coin, enthroned above the rack */
-.ultrow{display:flex;justify-content:center;margin:2px 0 14px}
+/* the $100 Ultimate Degen Coin — unseen until the entangled offer has appeared */
+.ultrow{display:none;justify-content:center;margin:2px 0 14px}
+.sheet.ult .ultrow{display:flex}
 .chip.ultimate{
   width:min(36vw,128px);flex-direction:column;display:flex;font-size:26px;
   background:
@@ -1111,8 +1112,21 @@ setTimeout(()=>{
 /* ── the entangled deal: orbs in the felt, a twin box on offer ── */
 const dealWrap=$('dealWrap');
 /* the entangled coins materialize a few seconds after a box seals;
-   passing on the deal makes them vanish until the next flip */
-function showOrbs(){ if(!boxed) return; document.querySelectorAll('.orb').forEach(o=>o.classList.add('show')); entChime(); }
+   passing on the deal makes them vanish until the next flip.
+   Their first appearance also unlocks the $100 Ultimate coin in the shop. */
+let ultUnlocked=false;
+try{ ultUnlocked=!!localStorage.getItem('degen_ult'); }catch(e){}
+if(ultUnlocked) sheet.classList.add('ult');
+function showOrbs(){
+  if(!boxed) return;
+  document.querySelectorAll('.orb').forEach(o=>o.classList.add('show'));
+  entChime();
+  if(!ultUnlocked){
+    ultUnlocked=true;
+    try{ localStorage.setItem('degen_ult','1'); }catch(e){}
+    sheet.classList.add('ult');
+  }
+}
 function hideOrbs(){ clearTimeout(orbTimer); orbTimer=null; document.querySelectorAll('.orb').forEach(o=>o.classList.remove('show')); }
 function scheduleOrbs(){ clearTimeout(orbTimer); orbTimer=setTimeout(showOrbs, 5000); }
 function entChime(){ if(!musicOn)return; audio(); const t=AC.currentTime;
