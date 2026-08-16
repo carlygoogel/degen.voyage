@@ -461,14 +461,11 @@ header{width:100%;display:flex;align-items:flex-end;justify-content:space-betwee
 .wagers .wg{flex:1}
 .wg{
   font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:14px;
-  min-width:48px;padding:6px 0 5px;border-radius:12px;cursor:pointer;line-height:1.15;
+  min-width:48px;padding:9px 0;border-radius:12px;cursor:pointer;
   color:var(--dim);background:transparent;border:1px solid rgba(245,208,97,.18);
   transition:all .15s;
 }
-.wg b{display:block;font-weight:700}
-.wg i{display:block;font-style:normal;font-size:9px;letter-spacing:.06em;color:var(--dim);opacity:.8}
 .wg.sel{color:var(--gold-1);border-color:var(--gold-2);background:rgba(245,208,97,.1);box-shadow:0 0 16px rgba(245,208,97,.18) inset}
-.wg.sel i{color:var(--q);opacity:1}
 
 /* ── deposit sheet ── */
 .scrim{
@@ -663,15 +660,15 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:25}
 
   <div class="controls">
     <div class="sides" id="sides">
-      <button class="side-btn sel" id="btnHeads" data-side="heads" aria-label="Heads">|H&gt;</button>
-      <button class="side-btn" id="btnTails" data-side="tails" aria-label="Tails">|T&gt;</button>
+      <button class="side-btn sel" id="btnHeads" data-side="heads">HEADS</button>
+      <button class="side-btn" id="btnTails" data-side="tails">TAILS</button>
     </div>
     <div class="wager-row">
       <div class="wagers" id="wagers">
-        <button class="wg sel" data-w="1"><b>1</b><i>30%</i></button>
-        <button class="wg" data-w="5"><b>5</b><i>45%</i></button>
-        <button class="wg" data-w="10"><b>10</b><i>60%</i></button>
-        <button class="wg" data-w="20"><b>20</b><i>75%</i></button>
+        <button class="wg sel" data-w="1">1</button>
+        <button class="wg" data-w="5">5</button>
+        <button class="wg" data-w="10">10</button>
+        <button class="wg" data-w="20">20</button>
       </div>
       <button class="qinfo" id="qinfo" aria-label="How observation odds work">i</button>
       <div class="qtip" id="qtip">The more you place, the more you tip the collapsed universal state in your favor.</div>
