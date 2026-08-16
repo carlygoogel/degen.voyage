@@ -632,7 +632,7 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:25}
         <div class="seam"></div>
         <div class="bbody"></div>
         <div class="paw"></div>
-        <div class="blabel" id="boxLabel">OBSERVE · 1</div>
+        <div class="blabel" id="boxLabel">OBSERVE 1</div>
       </div>
     </div>
   </div>
@@ -825,7 +825,7 @@ function resetCheckoutUI(){
 $('backToChips').onclick=resetCheckoutUI;
 function creditPurchase(coins){
   setBalance(balance + coins); chime();
-  toast.textContent=`PAYMENT RECEIVED · +${coins} DEGEN COIN${coins>1?'S':''}`;
+  toast.textContent=`+${coins} DEGEN COIN${coins>1?'S':''}`;
   toast.classList.remove('go'); void toast.offsetWidth; toast.classList.add('go');
   setTimeout(()=>toast.classList.remove('go'), 3600);
   track('coins_purchased', {coins, method:'embedded'});
@@ -891,7 +891,7 @@ document.querySelectorAll('.chip').forEach(c=>{
   if(bought>0){
     setBalance(balance + bought);
     history.replaceState({}, '', location.pathname); /* clean ?coins=N off the URL */
-    toast.textContent=`PAYMENT RECEIVED · +${bought} DEGEN COIN${bought>1?'S':''}`;
+    toast.textContent=`+${bought} DEGEN COIN${bought>1?'S':''}`;
     toast.classList.add('go');
     setTimeout(()=>toast.classList.remove('go'), 3600);
     /* if this page IS the checkout popup, hand coins to the table and bow out.
@@ -899,14 +899,14 @@ document.querySelectorAll('.chip').forEach(c=>{
     let popup = (window.name==='degen_pay');
     try{ popup = popup || !!(window.opener && !window.opener.closed); }catch(e){ popup=true; }
     if(popup){
-      toast.textContent=`+${bought} DEGEN COIN${bought>1?'S':''} — BACK TO YOUR TABLE`;
+      toast.textContent=`+${bought} DEGEN COIN${bought>1?'S':''}`;
       setTimeout(()=>{
         window.close();
         /* some browsers refuse to close a navigated popup — leave a clear exit */
         setTimeout(()=>{
           toast.style.animation='none'; toast.style.opacity='1';
           toast.style.transform='translate(-50%,0)';
-          toast.textContent='PAID ✓ — CLOSE THIS WINDOW TO RETURN TO YOUR TABLE';
+          toast.textContent='PAID ✓ CLOSE THIS WINDOW TO RETURN';
         }, 400);
       }, 1400);
     } else {
@@ -925,7 +925,7 @@ addEventListener('storage', e=>{
   if(gained>0){
     if(awaitingPurchase){ awaitingPurchase=false; track('coins_purchased', {coins: gained}); }
     closeSheet(); chime();
-    toast.textContent=`PAYMENT RECEIVED · +${gained} DEGEN COIN${gained>1?'S':''}`;
+    toast.textContent=`+${gained} DEGEN COIN${gained>1?'S':''}`;
     toast.classList.remove('go'); void toast.offsetWidth; toast.classList.add('go');
     setTimeout(()=>toast.classList.remove('go'), 3600);
   }
@@ -934,7 +934,7 @@ addEventListener('storage', e=>{
 /* flipping is free and open to anyone — paying happens at observation */
 coinWrap.onclick=()=>doFlip();
 box.onclick=()=>doReveal();
-function updateBoxLabel(){ boxLabel.textContent=`OBSERVE · ${wager}`; }
+function updateBoxLabel(){ boxLabel.textContent=`OBSERVE ${wager}`; }
 /* the live wavefunction: amplitudes are √p, leaning toward the paid side */
 function updateQmath(){
   const t=OBSERVE[wager]||OBSERVE[1];
@@ -1002,13 +1002,13 @@ function boxCaptions(){
   if(!boxed) return;
   coachAt(box,'PREDICT TO COLLAPSE', true);
   setTimeout(()=>{ if(!boxed) return; coachAt($('sides'),'HEADS OR TAILS'); $('sides').classList.add('hi'); }, 1300);
-  setTimeout(()=>{ if(!boxed) return; $('sides').classList.remove('hi'); coachAt($('sides'),'PAY MORE · TIP THE UNIVERSE'); $('wagers').classList.add('hi'); }, 2700);
+  setTimeout(()=>{ if(!boxed) return; $('sides').classList.remove('hi'); coachAt($('sides'),'PAY MORE TO TIP THE UNIVERSE'); $('wagers').classList.add('hi'); }, 2700);
   setTimeout(()=>{ if(!boxed) return; coachHide(); }, 4400);
 }
 setTimeout(()=>{
   if(flipping) return;
   if(boxed) boxCaptions();
-  else if(!coachOff) coachAt(coinWrap,'TAP TO FLIP · FREE');
+  else if(!coachOff) coachAt(coinWrap,'TAP TO FLIP');
 }, 900);
 
 /* ── confetti ── */
