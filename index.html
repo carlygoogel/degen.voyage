@@ -399,7 +399,7 @@ header{width:100%;display:flex;align-items:flex-end;justify-content:space-betwee
 /* ── two entangled coins, spinning in anti-phase, flanking the table ── */
 .orb{
   position:fixed;z-index:2;border:none;padding:0;cursor:pointer;background:none;
-  width:44px;height:44px;top:16vh;
+  width:54px;height:54px;top:15vh;
   filter:drop-shadow(0 0 18px rgba(245,208,97,.8)) drop-shadow(0 0 9px rgba(167,139,255,.45));
   opacity:0;pointer-events:none;transition:opacity .45s;
   -webkit-tap-highlight-color:transparent;
@@ -409,23 +409,24 @@ header{width:100%;display:flex;align-items:flex-end;justify-content:space-betwee
   animation:orbIn .55s cubic-bezier(.2,1.3,.4,1), orbFloat 5.5s ease-in-out .55s infinite;
 }
 @keyframes orbIn{from{opacity:0;transform:scale(.4) translateY(12px)}}
-.orb.o1{left:calc(50% - min(44vw, 225px))}
-.orb.o2{left:calc(50% + min(44vw, 225px) - 44px)}
+.orb.o1{left:calc(50% - min(44vw, 230px))}
+.orb.o2{left:calc(50% + min(44vw, 230px) - 54px)}
 .orb.o2.show{animation-delay:0s, 2s}
-.orb .mcoin{ /* a miniature Degen Coin */
+.mcoin{ /* a miniature Degen Coin */
   display:flex;align-items:center;justify-content:center;
   width:100%;height:100%;border-radius:50%;
-  font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:17px;font-style:normal;
-  color:#8a6210;text-shadow:0 1px 0 #ffefad;
+  font-family:'Bebas Neue',sans-serif;font-size:24px;font-style:normal;line-height:1;
+  color:#8a6210;text-shadow:0 1px 0 #ffefad, 0 -1px 1px rgba(60,38,4,.5);
   background:radial-gradient(circle at 35% 30%, #ffe9a0 0%, #f0c94e 42%, #d4a428 68%, #b8860b 100%);
-  box-shadow:inset 0 0 0 2px #c9931a, inset 0 0 0 3px #f7dd7e,
-             inset 0 -4px 7px rgba(90,60,8,.4), inset 0 3px 6px rgba(255,248,214,.45);
-  animation:entSpin 2.6s linear infinite;
+  box-shadow:inset 0 0 0 2px #c9931a, inset 0 0 0 4px #f7dd7e,
+             inset 0 -5px 8px rgba(90,60,8,.45), inset 0 4px 7px rgba(255,248,214,.5);
+  animation:entSpin 3.2s linear infinite;
 }
-.orb.o2 .mcoin{animation-delay:-1.3s} /* its twin is edge-on exactly when this one faces you */
+/* true anti-phase: the squash cycle is half the period, so offset by a quarter */
+.orb.o2 .mcoin{animation-delay:-.8s}
 @keyframes entSpin{
-  0%,50%,100%{transform:scaleX(1)}
-  25%,75%{transform:scaleX(.1)}
+  0%,50%,100%{transform:scaleX(1);filter:brightness(1)}
+  25%,75%{transform:scaleX(.16);filter:brightness(1.35)}
 }
 .orb::before,.orb::after{ /* electron rings */
   content:"";position:absolute;inset:-26%;border-radius:50%;
@@ -460,6 +461,22 @@ header{width:100%;display:flex;align-items:flex-end;justify-content:space-betwee
   filter:drop-shadow(0 0 18px rgba(167,139,255,.5));
 }
 .deal p{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:12px;letter-spacing:.06em;color:var(--text);margin-top:8px;line-height:1.5}
+/* the pair, visibly entangled: anti-phase spin joined by a live thread */
+.dealviz{display:flex;align-items:center;justify-content:center;margin:16px 0 6px}
+.dealviz .mcoin{width:46px;height:46px;font-size:21px;flex:0 0 auto}
+.dealviz .mcoin:last-child{animation-delay:-.8s}
+.dealviz .dthread{
+  position:relative;flex:0 0 auto;width:72px;height:2px;border-radius:2px;
+  background:linear-gradient(90deg,#f5d061,var(--q),#f5d061);
+  background-size:200% 100%;animation:seamFlow 2.2s linear infinite;
+  box-shadow:0 0 8px rgba(167,139,255,.55);
+}
+.dealviz .dthread::after{ /* the spark passing between them */
+  content:"";position:absolute;top:50%;left:0;width:6px;height:6px;border-radius:50%;
+  transform:translate(-50%,-50%);background:#fff3c4;box-shadow:0 0 9px #fff3c4;
+  animation:sparkRide 1.5s ease-in-out infinite alternate;
+}
+@keyframes sparkRide{to{left:100%}}
 .dbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
 .dtake{
   font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.12em;text-indent:.12em;
@@ -705,8 +722,8 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:25}
 </head>
 <body>
 <div class="table"></div>
-<button class="orb o1" aria-label="Entangled coin"><i class="mcoin">ψ</i></button>
-<button class="orb o2" aria-label="Entangled coin"><i class="mcoin">ψ</i></button>
+<button class="orb o1" aria-label="Entangled coin heads"><i class="mcoin">H</i></button>
+<button class="orb o2" aria-label="Entangled coin tails"><i class="mcoin">T</i></button>
 <canvas id="fx"></canvas>
 <div class="flash" id="flash"></div>
 <div class="strobe" id="strobe"></div>
@@ -798,6 +815,9 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:25}
 <div class="dealwrap" id="dealWrap" hidden>
   <div class="deal">
     <h3>NEW DEAL</h3>
+    <div class="dealviz" aria-hidden="true">
+      <i class="mcoin">H</i><span class="dthread"></span><i class="mcoin">T</i>
+    </div>
     <p class="d1">100 TO SEE YOUR COIN</p>
     <p class="d2">THEN PREDICT ITS ENTANGLED TWIN</p>
     <div class="dbtns">
@@ -882,7 +902,7 @@ const PAY_LINKS = {  /* LIVE links — real charges; checkout opens direct to St
   5:   'https://buy.stripe.com/6oUfZh2k80tccLV5qAd3i01',
   10:  'https://buy.stripe.com/5kQ28r8IwdfY5jtbOYd3i02',
   20:  'https://buy.stripe.com/fZu8wPgaYcbU3bl06gd3i03',
-  100: 'https://buy.stripe.com/4gMaEX8Iw4JsbHRdX6d3i04' /* redirect: https://degen.voyage/?coins=100 */
+  100: 'https://buy.stripe.com/28E14n5wka3M7rB6uEd3i05' /* one-time purchase; redirect: https://degen.voyage/?coins=100 */
 };
 
 /* ── POSTHOG ANALYTICS ───────────────────────────────────────────
@@ -1196,33 +1216,31 @@ function resolveTwin(){
 const fx=$('fx'), ctx=fx.getContext('2d');
 function fit(){ fx.width=innerWidth*devicePixelRatio; fx.height=innerHeight*devicePixelRatio; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); }
 fit(); addEventListener('resize',fit);
-/* the thread of light between the entangled coins — anchored, no wandering */
-let orbPts=null, orbEl=null, threadAlpha=0;
-function cacheOrbs(){
-  const a=document.querySelector('.orb.o1'), b=document.querySelector('.orb.o2');
-  if(!a||!b) return;
-  orbEl=a;
-  const ra=a.getBoundingClientRect(), rb=b.getBoundingClientRect();
-  orbPts={x1:ra.left+ra.width/2, y1:ra.top+ra.height/2, x2:rb.left+rb.width/2, y2:rb.top+rb.height/2};
-}
-cacheOrbs(); addEventListener('resize',cacheOrbs);
+/* the thread of light between the entangled coins.
+   Positions are read fresh every frame, so the thread stays welded to the
+   coins through resizes, zooms, and their idle float — it cannot detach. */
+const orbA=document.querySelector('.orb.o1'), orbB=document.querySelector('.orb.o2');
+let threadAlpha=0;
 function drawThread(t){
-  if(!orbPts) return;
-  const shown = orbEl && orbEl.classList.contains('show');
+  if(!orbA||!orbB) return;
+  const shown = orbA.classList.contains('show');
   threadAlpha += ((shown?1:0)-threadAlpha)*.06; /* fades in and out with the coins */
   if(threadAlpha<.02) return;
-  const mx=(orbPts.x1+orbPts.x2)/2;
-  const my=(orbPts.y1+orbPts.y2)/2 + 10 + Math.sin(t*1.6)*5; /* gentle sag, no drift */
+  const ra=orbA.getBoundingClientRect(), rb=orbB.getBoundingClientRect();
+  const x1=ra.left+ra.width/2, y1=ra.top+ra.height/2;
+  const x2=rb.left+rb.width/2, y2=rb.top+rb.height/2;
+  const mx=(x1+x2)/2;
+  const my=(y1+y2)/2 + 12 + Math.sin(t*1.6)*4; /* gentle sag, no drift */
   ctx.save();
   ctx.globalAlpha=threadAlpha*(.5+.18*Math.sin(t*3));
-  const g=ctx.createLinearGradient(orbPts.x1,orbPts.y1,orbPts.x2,orbPts.y2);
+  const g=ctx.createLinearGradient(x1,y1,x2,y2);
   g.addColorStop(0,'#f5d061'); g.addColorStop(.5,'#a78bff'); g.addColorStop(1,'#f5d061');
   ctx.strokeStyle=g; ctx.lineWidth=2;
-  ctx.beginPath(); ctx.moveTo(orbPts.x1,orbPts.y1);
-  ctx.quadraticCurveTo(mx,my,orbPts.x2,orbPts.y2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x1,y1);
+  ctx.quadraticCurveTo(mx,my,x2,y2); ctx.stroke();
   /* a spark riding the thread */
   const u=(Math.sin(t*.9)+1)/2, v=1-u;
-  const sx=v*v*orbPts.x1+2*v*u*mx+u*u*orbPts.x2, sy=v*v*orbPts.y1+2*v*u*my+u*u*orbPts.y2;
+  const sx=v*v*x1+2*v*u*mx+u*u*x2, sy=v*v*y1+2*v*u*my+u*u*y2;
   ctx.globalAlpha=threadAlpha*.85*(.6+.4*Math.sin(t*7));
   ctx.fillStyle='#fff3c4';
   ctx.beginPath(); ctx.arc(sx,sy,2.4,0,7); ctx.fill();
