@@ -549,6 +549,10 @@ header{width:100%;display:flex;align-items:flex-end;justify-content:space-betwee
 }
 .sheet.open{transform:translateY(0)}
 .sheet{max-height:90dvh;overflow-y:auto}
+.sheet .fine{
+  margin:14px 0 0;text-align:center;white-space:nowrap;
+  font-size:9px;letter-spacing:.02em;color:var(--dim);opacity:.8;
+}
 .sheet h2{font-family:'Bebas Neue';font-size:30px;letter-spacing:.16em;color:var(--gold-2)}
 .sheet p{font-size:12px;color:var(--dim);margin:6px 0 20px;letter-spacing:.06em}
 .chips{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
@@ -771,6 +775,7 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:25}
     <button class="chip" data-amt="10"><span>$10</span></button>
     <button class="chip" data-amt="20"><span>$20</span></button>
   </div>
+  <p class="fine">$1 = 1 Degen Coin. Play money only, never converts to cash.</p>
 </div>
 
 <script>
