@@ -134,6 +134,12 @@ header{width:100%;display:flex;align-items:flex-end;justify-content:space-betwee
   text-shadow:0 2px 0 #ffefad, 0 -2px 2px rgba(60,38,4,.6);
   transform:translateY(2%);
 }
+.face .qmark{ /* every Degen Coin carries the wavefunction */
+  position:absolute;bottom:13%;left:50%;transform:translateX(-50%);
+  font-family:'IBM Plex Mono',monospace;font-weight:700;
+  font-size:calc(var(--d)*.1);line-height:1;color:#8a6210;
+  text-shadow:0 1px 0 #ffefad;opacity:.85;
+}
 .face.tails{transform:rotateX(180deg)}
 /* shimmer sweep on idle */
 .sheen{
@@ -427,7 +433,30 @@ header{width:100%;display:flex;align-items:flex-end;justify-content:space-betwee
   box-shadow:0 6px 26px rgba(212,160,32,.4), inset 0 1px 0 #fffbe8;
   transform:translateY(-2px);
 }
-.wager-row{display:flex;align-items:center;justify-content:center;gap:10px}
+/* the pay-to-predict tiers only exist once a flip is sealed in the box */
+.wager-row{
+  position:relative;display:flex;align-items:center;justify-content:center;gap:10px;
+  opacity:0;pointer-events:none;transform:translateY(10px);
+  transition:opacity .4s ease, transform .4s ease;
+}
+.stage.boxed .wager-row{opacity:1;pointer-events:auto;transform:none}
+.qinfo{
+  flex:0 0 auto;width:22px;height:22px;border-radius:50%;cursor:pointer;padding:0;
+  font-family:'IBM Plex Mono',monospace;font-weight:700;font-style:italic;font-size:12px;line-height:1;
+  color:var(--q);background:rgba(167,139,255,.08);border:1px solid rgba(167,139,255,.5);
+  transition:color .2s, border-color .2s, box-shadow .2s;
+}
+.qinfo:hover{color:var(--gold-1);border-color:var(--gold-2);box-shadow:0 0 10px rgba(245,208,97,.35)}
+.qtip{
+  position:absolute;left:50%;bottom:calc(100% + 10px);
+  transform:translateX(-50%) translateY(5px);
+  width:min(78vw,300px);padding:10px 14px;border-radius:12px;
+  background:rgba(21,16,32,.96);border:1px solid rgba(167,139,255,.45);
+  font-size:12px;line-height:1.55;letter-spacing:.04em;color:var(--text);text-align:center;
+  box-shadow:0 8px 26px rgba(0,0,0,.5), 0 0 20px rgba(167,139,255,.18);
+  opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;z-index:8;
+}
+.qinfo:hover ~ .qtip, .qtip.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .wagers{display:flex;gap:8px;width:100%}
 .wagers .wg{flex:1}
 .wg{
@@ -458,13 +487,6 @@ header{width:100%;display:flex;align-items:flex-end;justify-content:space-betwee
 }
 .sheet.open{transform:translateY(0)}
 .sheet{max-height:90dvh;overflow-y:auto}
-.backbtn{
-  background:none;border:none;cursor:pointer;padding:0 0 12px;
-  font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;
-  color:var(--dim);
-}
-#checkoutMount{min-height:430px;border-radius:14px;overflow:hidden;background:#fff}
-.chip.busy{opacity:.45;pointer-events:none}
 .sheet h2{font-family:'Bebas Neue';font-size:30px;letter-spacing:.16em;color:var(--gold-2)}
 .sheet p{font-size:12px;color:var(--dim);margin:6px 0 20px;letter-spacing:.06em}
 .chips{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
@@ -606,9 +628,11 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:25}
         <div class="coin" id="coin">
           <div class="face heads">
             <div class="glyph">H</div>
+            <div class="qmark">ψ</div>
           </div>
           <div class="face tails">
             <div class="glyph">T</div>
+            <div class="qmark">ψ</div>
           </div>
         </div>
         <div class="sheen"></div>
@@ -632,7 +656,7 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:25}
         <div class="seam"></div>
         <div class="bbody"></div>
         <div class="paw"></div>
-        <div class="blabel" id="boxLabel">OBSERVE · 1</div>
+        <div class="blabel" id="boxLabel">OBSERVE 1</div>
       </div>
     </div>
   </div>
@@ -649,6 +673,8 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:25}
         <button class="wg" data-w="10"><b>10</b><i>60%</i></button>
         <button class="wg" data-w="20"><b>20</b><i>75%</i></button>
       </div>
+      <button class="qinfo" id="qinfo" aria-label="How observation odds work">i</button>
+      <div class="qtip" id="qtip">The more you place, the more you tip the collapsed universal state in your favor.</div>
     </div>
   </div>
 </div>
@@ -664,17 +690,13 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:25}
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet">
   <h2>BUY DEGEN COINS</h2>
-  <div class="chips" id="chipsGrid">
+  <div class="chips">
     <button class="chip" data-amt="1"><span>$1</span></button>
     <button class="chip" data-amt="5"><span>$5</span></button>
     <button class="chip" data-amt="10"><span>$10</span></button>
     <button class="chip" data-amt="20"><span>$20</span></button>
   </div>
-  <div id="checkoutBox" hidden>
-    <button class="backbtn" id="backToChips">‹ BACK</button>
-    <div id="checkoutMount"></div>
-  </div>
-  <p class="fine">$1 = 1 Degen Coin. Play money only — Degen Coins never convert
+  <p class="fine">$1 = 1 Degen Coin. Play money only. Degen Coins never convert
   back to cash.</p>
 </div>
 
@@ -691,7 +713,10 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let balance=0, wager=1, side='heads', rot=0, flipping=false;
 let pendingCredit=0; /* win amount owed while the coin-flight animation plays */
 let boxed=false; /* a flipped coin sits in the box in genuine superposition */
-const box=$('box'), boxLabel=$('boxLabel'), qmath=$('qmath'), coach=$('coach');
+const box=$('box'), boxLabel=$('boxLabel'), qmath=$('qmath'), coach=$('coach'), qtip=$('qtip');
+/* the little i: tap to read how observation odds work, tap anywhere to dismiss */
+$('qinfo').onclick=(e)=>{ e.stopPropagation(); qtip.classList.toggle('show'); };
+addEventListener('pointerdown', e=>{ if(!e.target.closest('.qinfo')) qtip.classList.remove('show'); });
 
 /* ── quantum observation tiers ──────────────────────────────────
    Nothing is decided at the flip. Paying to OBSERVE collapses the
@@ -729,24 +754,12 @@ const OBSERVE = {
    Degen Coins never convert back to dollars — play money only.
    Honor-system caveat: with no server, ?coins=N typed by hand also
    credits. Fine for an arcade toy; a webhook backend fixes it.     */
-const PAY_LINKS = {  /* LIVE links — real charges (popup fallback path) */
+const PAY_LINKS = {  /* LIVE links — real charges; checkout opens direct to Stripe */
   1:  'https://buy.stripe.com/cNi6oH5wkb7QaDNaKUd3i00',
   5:  'https://buy.stripe.com/6oUfZh2k80tccLV5qAd3i01',
   10: 'https://buy.stripe.com/5kQ28r8IwdfY5jtbOYd3i02',
   20: 'https://buy.stripe.com/fZu8wPgaYcbU3bl06gd3i03'
 };
-
-/* ── EMBEDDED CHECKOUT (card form right on this page, no redirect) ──
-   Two-part setup:
-   1. Netlify → Site configuration → Environment variables → add
-      STRIPE_SECRET_KEY = sk_live_...   (Stripe → Developers → API
-      keys). NEVER put the secret key in this file.
-   2. Paste your PUBLISHABLE key (pk_live_..., the public one) below.
-   Deploy must include netlify.toml + netlify/functions/ alongside
-   this file (download the repo branch as ZIP and drop that folder).
-   While the key below is empty or the backend errors, chips
-   automatically fall back to the payment-link popup above.          */
-const STRIPE_PK = 'pk_live_51U2iAyE6rLwqEJikQwLe00L6Jw7NiWkXqeaOan0J0Erf7Iz5bihW1R93fk19EvsBQaPHYWik853gfGP0AWihSQ7U00Ran5zGYD';
 
 /* ── POSTHOG ANALYTICS ───────────────────────────────────────────
    Live with the project key. POSTHOG_HOST points at PostHog's US
@@ -798,71 +811,16 @@ function setBalance(v, animate=true){
 balanceEl.textContent=''+balance;
 
 /* ── deposit sheet ── */
-function openSheet(){ sheet.classList.add('open'); scrim.classList.add('open'); if(STRIPE_PK) loadStripeJs(); track('deposit_sheet_opened', {balance}); }
-function closeSheet(){ resetCheckoutUI(); sheet.classList.remove('open'); scrim.classList.remove('open'); }
+function openSheet(){ sheet.classList.add('open'); scrim.classList.add('open'); track('deposit_sheet_opened', {balance}); }
+function closeSheet(){ sheet.classList.remove('open'); scrim.classList.remove('open'); }
 scrim.onclick=closeSheet;
 bank.onclick=openSheet;
 
-/* ── buying coins: embedded checkout with popup fallback ── */
-const chipsGrid=$('chipsGrid'), checkoutBox=$('checkoutBox'), checkoutMount=$('checkoutMount');
-let currentCheckout=null, stripeJs=null;
-function loadStripeJs(){
-  if(stripeJs) return stripeJs;
-  stripeJs=new Promise((res,rej)=>{
-    const s=document.createElement('script');
-    s.src='https://js.stripe.com/v3/'; s.async=true;
-    s.onload=res; s.onerror=()=>{ stripeJs=null; rej(new Error('stripe.js failed')); };
-    document.head.appendChild(s);
-  });
-  stripeJs.catch(()=>{}); /* pre-warm callers may ignore a failed load */
-  return stripeJs;
-}
-function resetCheckoutUI(){
-  if(currentCheckout){ try{ currentCheckout.destroy(); }catch(e){} currentCheckout=null; }
-  checkoutBox.hidden=true; chipsGrid.style.display='';
-  checkoutMount.innerHTML='';
-}
-$('backToChips').onclick=resetCheckoutUI;
-function creditPurchase(coins){
-  setBalance(balance + coins); chime();
-  toast.textContent=`PAYMENT RECEIVED · +${coins} DEGEN COIN${coins>1?'S':''}`;
-  toast.classList.remove('go'); void toast.offsetWidth; toast.classList.add('go');
-  setTimeout(()=>toast.classList.remove('go'), 3600);
-  track('coins_purchased', {coins, method:'embedded'});
-}
-async function embeddedCheckout(amt){
-  const jsReady=loadStripeJs();
-  const res=await fetch('/api/create-checkout-session', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({coins:amt})
-  });
-  if(!res.ok) throw new Error('session endpoint '+res.status);
-  const {clientSecret}=await res.json();
-  if(!clientSecret) throw new Error('no client secret');
-  await jsReady;
-  const sessionId=clientSecret.split('_secret')[0];
-  const checkout=await Stripe(STRIPE_PK).initEmbeddedCheckout({
-    clientSecret,
-    onComplete: async ()=>{
-      let coins=amt;
-      try{ /* confirm with the backend that this session really paid */
-        const v=await fetch('/api/session-status?session_id='+encodeURIComponent(sessionId)).then(r=>r.json());
-        if(v && v.status==='complete') coins=v.coins||amt; else return;
-      }catch(e){}
-      resetCheckoutUI();
-      creditPurchase(coins);
-      setTimeout(closeSheet, 700);
-    }
-  });
-  currentCheckout=checkout;
-  chipsGrid.style.display='none'; checkoutBox.hidden=false;
-  checkout.mount('#checkoutMount');
-}
+/* ── buying coins: straight to Stripe, in a popup so the table stays live ── */
 function popupFlow(amt){
   const link=PAY_LINKS[amt];
   if(link){
     saveBal(); awaitingPurchase=true;
-    /* checkout in a popup keeps the table alive behind it */
     const w=window.open(link, 'degen_pay', 'popup,width=480,height=780');
     track('checkout_opened', {usd: amt, method: w?'popup':'redirect'});
     if(!w) location.href=link; /* popup blocked → classic same-tab redirect */
@@ -871,18 +829,7 @@ function popupFlow(amt){
   setBalance(balance + amt); closeSheet(); chime();  /* demo mode when no link set */
 }
 document.querySelectorAll('.chip').forEach(c=>{
-  c.onclick=()=>{
-    const amt=+c.dataset.amt;
-    if(STRIPE_PK){
-      c.classList.add('busy');
-      track('checkout_opened', {usd: amt, method:'embedded'});
-      embeddedCheckout(amt)
-        .catch(()=>popupFlow(amt))  /* backend not ready → payment-link popup */
-        .finally(()=>c.classList.remove('busy'));
-      return;
-    }
-    popupFlow(amt);
-  };
+  c.onclick=()=>popupFlow(+c.dataset.amt);
 });
 /* returning from Stripe: credit purchased Degen Coins */
 (function(){
@@ -891,7 +838,7 @@ document.querySelectorAll('.chip').forEach(c=>{
   if(bought>0){
     setBalance(balance + bought);
     history.replaceState({}, '', location.pathname); /* clean ?coins=N off the URL */
-    toast.textContent=`PAYMENT RECEIVED · +${bought} DEGEN COIN${bought>1?'S':''}`;
+    toast.textContent=`+${bought} DEGEN COIN${bought>1?'S':''}`;
     toast.classList.add('go');
     setTimeout(()=>toast.classList.remove('go'), 3600);
     /* if this page IS the checkout popup, hand coins to the table and bow out.
@@ -899,14 +846,14 @@ document.querySelectorAll('.chip').forEach(c=>{
     let popup = (window.name==='degen_pay');
     try{ popup = popup || !!(window.opener && !window.opener.closed); }catch(e){ popup=true; }
     if(popup){
-      toast.textContent=`+${bought} DEGEN COIN${bought>1?'S':''} — BACK TO YOUR TABLE`;
+      toast.textContent=`+${bought} DEGEN COIN${bought>1?'S':''}`;
       setTimeout(()=>{
         window.close();
         /* some browsers refuse to close a navigated popup — leave a clear exit */
         setTimeout(()=>{
           toast.style.animation='none'; toast.style.opacity='1';
           toast.style.transform='translate(-50%,0)';
-          toast.textContent='PAID ✓ — CLOSE THIS WINDOW TO RETURN TO YOUR TABLE';
+          toast.textContent='PAID ✓ CLOSE THIS WINDOW TO RETURN';
         }, 400);
       }, 1400);
     } else {
@@ -925,7 +872,7 @@ addEventListener('storage', e=>{
   if(gained>0){
     if(awaitingPurchase){ awaitingPurchase=false; track('coins_purchased', {coins: gained}); }
     closeSheet(); chime();
-    toast.textContent=`PAYMENT RECEIVED · +${gained} DEGEN COIN${gained>1?'S':''}`;
+    toast.textContent=`+${gained} DEGEN COIN${gained>1?'S':''}`;
     toast.classList.remove('go'); void toast.offsetWidth; toast.classList.add('go');
     setTimeout(()=>toast.classList.remove('go'), 3600);
   }
@@ -934,7 +881,7 @@ addEventListener('storage', e=>{
 /* flipping is free and open to anyone — paying happens at observation */
 coinWrap.onclick=()=>doFlip();
 box.onclick=()=>doReveal();
-function updateBoxLabel(){ boxLabel.textContent=`OBSERVE · ${wager}`; }
+function updateBoxLabel(){ boxLabel.textContent=`OBSERVE ${wager}`; }
 /* the live wavefunction: amplitudes are √p, leaning toward the paid side */
 function updateQmath(){
   const t=OBSERVE[wager]||OBSERVE[1];
@@ -1002,13 +949,13 @@ function boxCaptions(){
   if(!boxed) return;
   coachAt(box,'PREDICT TO COLLAPSE', true);
   setTimeout(()=>{ if(!boxed) return; coachAt($('sides'),'HEADS OR TAILS'); $('sides').classList.add('hi'); }, 1300);
-  setTimeout(()=>{ if(!boxed) return; $('sides').classList.remove('hi'); coachAt($('sides'),'PAY MORE · TIP THE UNIVERSE'); $('wagers').classList.add('hi'); }, 2700);
-  setTimeout(()=>{ if(!boxed) return; coachHide(); }, 4400);
+  setTimeout(()=>{ if(!boxed) return; coachHide(); qtip.classList.add('show'); $('qinfo').classList.add('hi'); }, 2700);
+  setTimeout(()=>{ qtip.classList.remove('show'); $('qinfo').classList.remove('hi'); }, 5400);
 }
 setTimeout(()=>{
   if(flipping) return;
   if(boxed) boxCaptions();
-  else if(!coachOff) coachAt(coinWrap,'TAP TO FLIP · FREE');
+  else if(!coachOff) coachAt(coinWrap,'TAP TO FLIP');
 }, 900);
 
 /* ── confetti ── */
