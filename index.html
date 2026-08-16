@@ -140,26 +140,6 @@ header{width:100%;display:flex;align-items:flex-end;justify-content:space-betwee
   font-size:calc(var(--d)*.1);line-height:1;color:#8a6210;
   text-shadow:0 1px 0 #ffefad;opacity:.85;
 }
-.face .catmark{ /* and the cat: ears over slit-pupil eyes, struck into the gold */
-  position:absolute;top:12.5%;left:50%;transform:translateX(-50%);
-  width:calc(var(--d)*.21);height:calc(var(--d)*.125);
-  filter:drop-shadow(0 1px 0 #ffefad);opacity:.9;
-}
-.catmark::before,.catmark::after{
-  content:"";position:absolute;top:0;width:32%;height:52%;background:#8a6210;
-}
-.catmark::before{left:5%;clip-path:polygon(0 100%,100% 100%,58% 0)}
-.catmark::after{right:5%;clip-path:polygon(0 100%,100% 100%,42% 0)}
-.catmark i{
-  position:absolute;bottom:0;width:27%;aspect-ratio:1;border-radius:50%;
-  background:#8a6210;
-}
-.catmark i::after{
-  content:"";position:absolute;left:50%;top:16%;width:24%;height:66%;
-  transform:translateX(-50%);border-radius:45%;background:#f0c94e;
-}
-.catmark i.l{left:7%}
-.catmark i.r{right:7%}
 .face.tails{transform:rotateX(180deg)}
 /* shimmer sweep on idle */
 .sheen{
@@ -647,12 +627,10 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:25}
       <div class="coin-wrap" id="coinWrap">
         <div class="coin" id="coin">
           <div class="face heads">
-            <div class="catmark" aria-hidden="true"><i class="l"></i><i class="r"></i></div>
             <div class="glyph">H</div>
             <div class="qmark">ψ</div>
           </div>
           <div class="face tails">
-            <div class="catmark" aria-hidden="true"><i class="l"></i><i class="r"></i></div>
             <div class="glyph">T</div>
             <div class="qmark">ψ</div>
           </div>
@@ -696,7 +674,7 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:25}
         <button class="wg" data-w="20"><b>20</b><i>75%</i></button>
       </div>
       <button class="qinfo" id="qinfo" aria-label="How observation odds work">i</button>
-      <div class="qtip" id="qtip">The more you place, the more you tip the next state outcome in your favor.</div>
+      <div class="qtip" id="qtip">The more you place, the more you tip the collapsed universal state in your favor.</div>
     </div>
   </div>
 </div>
