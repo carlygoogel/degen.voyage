@@ -394,6 +394,69 @@ header{width:100%;display:flex;align-items:flex-end;justify-content:space-betwee
   100%{transform:translate(-50%,-46%) perspective(700px) rotateY(720deg)}
 }
 
+/* ── entangled orbs in the felt ── */
+.orb{
+  position:fixed;z-index:2;border:none;padding:0;cursor:pointer;border-radius:50%;
+  background:radial-gradient(circle at 38% 35%, #fff3c4 0%, #f5d061 32%, rgba(201,147,26,.55) 58%, transparent 72%);
+  filter:drop-shadow(0 0 16px rgba(245,208,97,.6));
+  animation:orbFloat 5.5s ease-in-out infinite;
+  -webkit-tap-highlight-color:transparent;
+}
+.orb::before,.orb::after{ /* electron rings */
+  content:"";position:absolute;inset:-26%;border-radius:50%;
+  border:1px solid rgba(245,208,97,.45);
+  transform:rotateX(66deg) rotate(12deg);
+  animation:orbRing 8s linear infinite;
+}
+.orb::after{
+  inset:-12%;border-color:rgba(167,139,255,.45);
+  animation-duration:11s;animation-direction:reverse;
+}
+@keyframes orbRing{to{transform:rotateX(66deg) rotate(372deg)}}
+@keyframes orbFloat{50%{transform:translateY(-9px)}}
+.orb.o1{left:6%;top:13vh;width:42px;height:42px}
+.orb.o2{right:5%;top:30vh;width:62px;height:62px;animation-delay:1.2s}
+.orb.hot{filter:drop-shadow(0 0 26px rgba(245,208,97,.95)) drop-shadow(0 0 12px rgba(167,139,255,.6))}
+
+/* ── the entangled deal ── */
+.dealwrap{
+  position:fixed;inset:0;z-index:55;display:flex;align-items:center;justify-content:center;
+  background:rgba(4,3,7,.72);backdrop-filter:blur(6px);
+}
+.dealwrap[hidden]{display:none}
+.deal{
+  width:min(86vw,340px);text-align:center;padding:26px 22px;border-radius:22px;
+  background:linear-gradient(180deg,#171126,#0c0913);
+  border:1px solid rgba(167,139,255,.5);
+  box-shadow:0 0 50px rgba(167,139,255,.25), 0 24px 60px rgba(0,0,0,.6);
+}
+.deal h3{
+  font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:.2em;text-indent:.2em;
+  background:linear-gradient(178deg,var(--gold-1),var(--gold-2) 45%,var(--q));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 18px rgba(167,139,255,.5));
+}
+.deal p{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:12px;letter-spacing:.06em;color:var(--text);margin-top:8px;line-height:1.5}
+.dbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+.dtake{
+  font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.12em;text-indent:.12em;
+  padding:13px 0 10px;border:none;border-radius:14px;cursor:pointer;color:#231604;
+  background:linear-gradient(180deg,#fff3c4,#f5d061 45%,#c9931a);
+  box-shadow:0 8px 24px rgba(212,160,32,.4), inset 0 1px 0 #fffbe8;
+}
+.dtake:active{transform:translateY(2px)}
+.dpass{
+  font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.12em;text-indent:.12em;
+  padding:13px 0 10px;border-radius:14px;cursor:pointer;
+  color:var(--dim);background:rgba(255,255,255,.04);border:1px solid rgba(245,208,97,.2);
+}
+/* the twin box wears violet */
+.box.twin .seam{background:var(--q);animation:twinSeam 1.4s ease-in-out infinite}
+@keyframes twinSeam{50%{opacity:.3}}
+.box.twin .bbody::before{color:var(--q);text-shadow:0 0 18px rgba(245,208,97,.6)}
+.box.twin{animation:twinGlow 2.4s ease-in-out infinite}
+@keyframes twinGlow{50%{filter:drop-shadow(0 0 30px rgba(167,139,255,.7))}}
+
 /* ── first-visit coach: three words at a time, then gone forever ── */
 .coach{
   position:fixed;z-index:34;transform:translateX(-50%);pointer-events:none;
@@ -486,6 +549,10 @@ header{width:100%;display:flex;align-items:flex-end;justify-content:space-betwee
 }
 .sheet.open{transform:translateY(0)}
 .sheet{max-height:90dvh;overflow-y:auto}
+.sheet .fine{
+  margin:14px 0 0;text-align:center;white-space:nowrap;
+  font-size:9px;letter-spacing:.02em;color:var(--dim);opacity:.8;
+}
 .sheet h2{font-family:'Bebas Neue';font-size:30px;letter-spacing:.16em;color:var(--gold-2)}
 .sheet p{font-size:12px;color:var(--dim);margin:6px 0 20px;letter-spacing:.06em}
 .chips{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
@@ -584,7 +651,6 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:25}
   82%{transform:translate(-50%,0);opacity:1}
   100%{transform:translate(-50%,-30px);opacity:0}
 }
-.sheet .fine{margin:18px 2px 0;font-size:10px;line-height:1.7;color:var(--dim);letter-spacing:.05em}
 
 .shake{animation:shake .45s ease}
 @keyframes shake{
@@ -598,6 +664,8 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:25}
 </head>
 <body>
 <div class="table"></div>
+<button class="orb o1" aria-label="Entangled orb"></button>
+<button class="orb o2" aria-label="Entangled orb"></button>
 <canvas id="fx"></canvas>
 <div class="flash" id="flash"></div>
 <div class="strobe" id="strobe"></div>
@@ -686,6 +754,18 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:25}
 <div class="toast" id="toast"></div>
 <div class="coach" id="coach"></div>
 
+<div class="dealwrap" id="dealWrap" hidden>
+  <div class="deal">
+    <h3>NEW DEAL</h3>
+    <p class="d1">100 TO SEE YOUR COIN</p>
+    <p class="d2">THEN PREDICT ITS ENTANGLED TWIN</p>
+    <div class="dbtns">
+      <button class="dtake" id="dealTake">DEAL 100</button>
+      <button class="dpass" id="dealPass">PASS</button>
+    </div>
+  </div>
+</div>
+
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet">
   <h2>BUY DEGEN COINS</h2>
@@ -695,8 +775,7 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:25}
     <button class="chip" data-amt="10"><span>$10</span></button>
     <button class="chip" data-amt="20"><span>$20</span></button>
   </div>
-  <p class="fine">$1 = 1 Degen Coin. Play money only. Degen Coins never convert
-  back to cash.</p>
+  <p class="fine">$1 = 1 Degen Coin. Play money only, never converts to cash.</p>
 </div>
 
 <script>
@@ -797,6 +876,7 @@ function loadBal(){ try{ return Math.max(0, +localStorage.getItem('degen_bal') |
 balance=loadBal(); 
 /* the coin itself is the toss button (tapping while broke opens the buy sheet) */
 function setBalance(v, animate=true){
+  v=Math.max(0, Math.round(v));
   const from=balance; balance=v; saveBal();
   if(!animate || reduced){ balanceEl.textContent=''+balance; return; }
   const t0=performance.now(), dur=600;
@@ -894,6 +974,13 @@ function updateQmath(){
      the outcome doesn't exist until someone pays to look ── */
 [$('btnHeads'),$('btnTails')].forEach(b=>{
   b.onclick=()=>{
+    if(dealPicking){ /* this click IS the twin prediction */
+      dealPicking=false; coachHide();
+      document.querySelectorAll('.side-btn').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel'); side=b.dataset.side;
+      resolveTwin();
+      return;
+    }
     if(flipping || boxed) return; /* the prediction is locked once the coin is sealed */
     document.querySelectorAll('.side-btn').forEach(x=>x.classList.remove('sel'));
     b.classList.add('sel'); side=b.dataset.side;
@@ -920,7 +1007,7 @@ document.querySelectorAll('.wg').forEach(b=>{
       }
       boxed=true;
       stage.classList.remove('idle'); stage.classList.add('boxed');
-      updateQmath();
+      updateQmath(); syncOrbs();
     }
   }catch(e){}
 })();
@@ -955,10 +1042,141 @@ setTimeout(()=>{
   else if(!coachOff) coachAt(coinWrap,'TAP TO FLIP');
 }, 900);
 
+/* ── the entangled deal: orbs in the felt, a twin box on offer ── */
+let dealPicking=false, dealYourFace=null;
+const dealWrap=$('dealWrap');
+function syncOrbs(){ document.querySelectorAll('.orb').forEach(o=>o.classList.toggle('hot', boxed && !flipping)); }
+function entChime(){ if(!musicOn)return; audio(); const t=AC.currentTime;
+  tone(660,t,.5,'sine',.09); tone(664,t,.5,'sine',.09); /* two detuned notes beating: entanglement */
+  tone(1320,t+.12,.3,'sine',.05); }
+document.querySelectorAll('.orb').forEach(o=>{
+  o.onclick=()=>{
+    if(flipping || dealPicking) return;
+    if(!boxed){ coachAt(coinWrap,'FLIP FIRST'); setTimeout(coachHide,1200); return; }
+    entChime(); dealWrap.hidden=false;
+    track('entangled_deal_offered', {balance});
+  };
+});
+$('dealPass').onclick=()=>{ dealWrap.hidden=true; };
+dealWrap.onclick=(e)=>{ if(e.target===dealWrap) dealWrap.hidden=true; };
+$('dealTake').onclick=()=>{
+  if(balance<100){ dealWrap.hidden=true; openSheet(); return; }
+  dealWrap.hidden=true; startDeal();
+};
+function startDeal(){
+  if(flipping || !boxed) return;
+  boxed=false; flipping=true; clearBox(); coachDone(); syncOrbs();
+  stage.classList.remove('boxed'); stage.classList.add('flipping','revealing');
+  track('entangled_deal_taken', {balance});
+  dealYourFace = Math.random()<.5 ? 'heads' : 'tails';
+  /* first: your own coin, revealed as pure information */
+  box.classList.add('collapsing'); riser(reduced?.2:.6);
+  parts.forEach(p=>{ if(p.q){ p.va*=8; p.life=Math.min(p.life,.5); } });
+  const t1=reduced?60:620;
+  setTimeout(()=>{
+    box.classList.remove('collapsing'); box.classList.add('open'); shimmer();
+    qmath.innerHTML=`|ψ&gt; → <span class="aH">|${dealYourFace==='heads'?'H':'T'}&gt;</span>`;
+    qmath.classList.remove('snap'); void qmath.offsetWidth; qmath.classList.add('snap');
+  }, t1);
+  const yourTarget=dealYourFace==='heads'?0:180;
+  rot += 2*360 + ((yourTarget-(rot%360))+360)%360;
+  setTimeout(()=>{
+    coinWrap.getAnimations().forEach(a=>a.cancel());
+    if(!reduced){
+      coinWrap.animate(
+        [{transform:'translateY(17vh) scale(.32)', opacity:0},
+         {transform:'translateY(0) scale(1)', opacity:1}],
+        {duration:650, fill:'forwards', easing:'cubic-bezier(.2,1.1,.3,1)'});
+    }
+    coin.style.transition='transform .7s cubic-bezier(.2,.9,.25,1)';
+    requestAnimationFrame(()=>coin.style.transform=`rotateX(${rot}deg)`);
+    verdictWord.textContent=dealYourFace.toUpperCase();
+    verdictPay.textContent=''; verdictPay.className='payout';
+    verdict.classList.remove('out','go'); void verdict.offsetWidth; verdict.classList.add('go');
+  }, t1+(reduced?30:250));
+  /* then: your coin fades and the sealed twin arrives */
+  setTimeout(()=>{
+    verdict.classList.add('out'); setTimeout(()=>verdict.classList.remove('go','out'),450);
+    if(!reduced) coinWrap.animate([{opacity:1},{opacity:0}],{duration:400, fill:'forwards'});
+    box.classList.remove('open'); box.classList.add('twin');
+    boxLabel.textContent='TWIN';
+    box.classList.remove('enter'); void box.offsetWidth; box.classList.add('enter');
+    thump();
+    qmath.innerHTML='⟨twin|you⟩ = 0.75';
+    if(!reduced) for(let i=0;i<4;i++) spawnGlyph();
+  }, t1+(reduced?90:2100));
+  setTimeout(()=>{
+    dealPicking=true;
+    coachAt($('sides'),'PREDICT THE TWIN'); $('sides').classList.add('hi');
+  }, t1+(reduced?130:2700));
+}
+function resolveTwin(){
+  const match = Math.random() < .75;
+  const twinFace = match ? dealYourFace : (dealYourFace==='heads'?'tails':'heads');
+  dealYourFace=null;
+  box.classList.add('collapsing'); riser(reduced?.2:.7);
+  parts.forEach(p=>{ if(p.q){ p.va*=8; p.life=Math.min(p.life,.5); } });
+  const t=reduced?60:700;
+  setTimeout(()=>{
+    box.classList.remove('collapsing'); box.classList.add('open'); shimmer();
+    qmath.innerHTML=`|twin&gt; → <span class="${side===twinFace?'aH':'bT'}">|${twinFace==='heads'?'H':'T'}&gt;</span>`;
+    qmath.classList.remove('snap'); void qmath.offsetWidth; qmath.classList.add('snap');
+  }, t);
+  const targetFace=twinFace==='heads'?0:180;
+  rot += 2*360 + ((targetFace-(rot%360))+360)%360;
+  setTimeout(()=>{
+    coinWrap.getAnimations().forEach(a=>a.cancel());
+    if(!reduced){
+      coinWrap.animate(
+        [{transform:'translateY(17vh) scale(.32)', opacity:0},
+         {transform:'translateY(0) scale(1)', opacity:1}],
+        {duration:750, fill:'forwards', easing:'cubic-bezier(.2,1.1,.3,1)'});
+    }
+    shadow.animate([{opacity:0},{opacity:1}],{duration:600, fill:'forwards'});
+    coin.style.transition='transform .85s cubic-bezier(.2,.9,.25,1)';
+    requestAnimationFrame(()=>coin.style.transform=`rotateX(${rot}deg)`);
+  }, t+(reduced?20:300));
+  setTimeout(()=>box.classList.add('gone'), t+(reduced?40:740));
+  setTimeout(()=>{
+    box.classList.remove('open','gone','twin'); boxLabel.textContent='OBSERVE';
+    stage.classList.remove('revealing');
+    reveal(twinFace, {win:20, lose:100});
+  }, t+(reduced?80:1100));
+}
+
 /* ── confetti ── */
 const fx=$('fx'), ctx=fx.getContext('2d');
 function fit(){ fx.width=innerWidth*devicePixelRatio; fx.height=innerHeight*devicePixelRatio; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); }
 fit(); addEventListener('resize',fit);
+/* the thread of light between the entangled orbs */
+let orbPts=null;
+function cacheOrbs(){
+  const a=document.querySelector('.orb.o1'), b=document.querySelector('.orb.o2');
+  if(!a||!b) return;
+  const ra=a.getBoundingClientRect(), rb=b.getBoundingClientRect();
+  orbPts={x1:ra.left+ra.width/2, y1:ra.top+ra.height/2, x2:rb.left+rb.width/2, y2:rb.top+rb.height/2};
+}
+cacheOrbs(); addEventListener('resize',cacheOrbs);
+function drawThread(t){
+  if(!orbPts) return;
+  const hot=stage.classList.contains('boxed');
+  const mx=(orbPts.x1+orbPts.x2)/2 + Math.sin(t*1.3)*16;
+  const my=(orbPts.y1+orbPts.y2)/2 + Math.cos(t*1.7)*12;
+  ctx.save();
+  ctx.globalAlpha = hot ? .45+.2*Math.sin(t*3) : .18+.07*Math.sin(t*2);
+  const g=ctx.createLinearGradient(orbPts.x1,orbPts.y1,orbPts.x2,orbPts.y2);
+  g.addColorStop(0,'#f5d061'); g.addColorStop(.5,'#a78bff'); g.addColorStop(1,'#f5d061');
+  ctx.strokeStyle=g; ctx.lineWidth=hot?2:1.2;
+  ctx.beginPath(); ctx.moveTo(orbPts.x1,orbPts.y1);
+  ctx.quadraticCurveTo(mx,my,orbPts.x2,orbPts.y2); ctx.stroke();
+  /* a spark riding the thread */
+  const u=(Math.sin(t*.9)+1)/2, v=1-u;
+  const sx=v*v*orbPts.x1+2*v*u*mx+u*u*orbPts.x2, sy=v*v*orbPts.y1+2*v*u*my+u*u*orbPts.y2;
+  ctx.globalAlpha=(hot?.9:.4)*(.6+.4*Math.sin(t*7));
+  ctx.fillStyle='#fff3c4';
+  ctx.beginPath(); ctx.arc(sx,sy,hot?2.6:1.8,0,7); ctx.fill();
+  ctx.restore();
+}
 let parts=[], dust=[];
 for(let i=0;i<40;i++) dust.push({x:Math.random()*innerWidth, y:Math.random()*innerHeight,
   s:.6+Math.random()*1.8, vy:-(.08+Math.random()*.25), vx:(Math.random()-.5)*.15,
@@ -1065,6 +1283,7 @@ function fireworkShow(){
   ctx.clearRect(0,0,innerWidth,innerHeight);
   /* ambient floating gold dust */
   const t=performance.now()/1000;
+  drawThread(t);
   for(const d of dust){
     d.y+=d.vy; d.x+=d.vx+Math.sin(t+d.ph)*.15;
     if(d.y<-4){d.y=innerHeight+4; d.x=Math.random()*innerWidth;}
@@ -1282,7 +1501,8 @@ function doFlip(){
   if(!reduced){
     /* the box slides in under the falling coin… */
     setTimeout(()=>{
-      box.classList.remove('open','gone','deny');
+      box.classList.remove('open','gone','deny','twin');
+      boxLabel.textContent='OBSERVE';
       stage.classList.add('boxing');
       box.classList.remove('enter'); void box.offsetWidth; box.classList.add('enter');
     }, D*.5);
@@ -1324,7 +1544,7 @@ function doFlip(){
     flipping=false; boxed=true;
     stage.classList.remove('flipping','boxing'); stage.classList.add('boxed');
     box.classList.remove('enter','slam','spinshine');
-    updateQmath(); saveBox();
+    updateQmath(); saveBox(); syncOrbs();
     if(!reduced) for(let i=0;i<5;i++) spawnGlyph();
     boxCaptions();
     track('coin_boxed', {side, wager});
@@ -1344,7 +1564,7 @@ function doReveal(){
   const win = Math.random() < tier.p;
   const result = win ? side : (side==='heads' ? 'tails' : 'heads');
 
-  boxed=false; flipping=true; clearBox(); coachDone();
+  boxed=false; flipping=true; clearBox(); coachDone(); syncOrbs();
   stage.classList.remove('boxed'); stage.classList.add('flipping','revealing');
 
   /* the superposition tears: aura flickers between outcomes, math scrambles */
@@ -1407,11 +1627,13 @@ function countPayout(target){
   })(t0);
 }
 
-function reveal(result){
+function reveal(result, deal){
   const win = result===side;
   const tier = OBSERVE[wager]||OBSERVE[1];
-  const net = win ? tier.pay - wager : -wager; /* certainty was bought, value wasn't */
-  track('coin_flip', {wager, side, result, win, p:tier.p, pay:tier.pay, balance_after: balance + net});
+  const net = deal ? (win ? deal.win : -deal.lose)
+                   : (win ? tier.pay - wager : -wager); /* certainty was bought, value wasn't */
+  const stake = deal ? deal.lose : wager;
+  track('coin_flip', {wager: stake, side, result, win, deal: !!deal, balance_after: balance + net});
   strobe.classList.remove('go');
   /* impact */
   flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go');
@@ -1422,7 +1644,7 @@ function reveal(result){
   const banner=$('banner');
   if(win){
     stage.classList.add('win'); /* coin glows gold, beams spin up */
-    bannerText.textContent = wager>=20 ? 'JACKPOT' : 'WINNER';
+    bannerText.textContent = (deal || wager>=20) ? 'JACKPOT' : 'WINNER';
     rays.classList.remove('go'); void rays.offsetWidth; rays.classList.add('go');
     setTimeout(()=>{rays.classList.remove('go'); void rays.offsetWidth; rays.classList.add('go');},1700);
     if(!reduced){
@@ -1443,7 +1665,7 @@ function reveal(result){
 
   /* verdict stamp */
   verdictWord.textContent=result.toUpperCase();
-  verdictPay.textContent = win ? '+0' : `-${wager}`;
+  verdictPay.textContent = win ? '+0' : `-${stake}`;
   verdictPay.className = 'payout ' + (win?'win':'loss');
   verdict.classList.remove('out','go'); void verdict.offsetWidth; verdict.classList.add('go');
   if(win) setTimeout(()=>countPayout(net), 300);
@@ -1460,7 +1682,7 @@ function reveal(result){
       spawnStars(8, r.left+r.width/2, r.top+r.height/2, 80);
     }), 500);
   } else {
-    setTimeout(()=>setBalance(balance - wager), 350);
+    setTimeout(()=>setBalance(balance - stake), 350);
   }
 
   const hold = win ? 4400 : 2100; /* wins party longer */
@@ -1470,6 +1692,7 @@ function reveal(result){
     banner.classList.remove('go');
     flipping=false;
     stage.classList.remove('flipping','win'); stage.classList.add('idle');
+    syncOrbs();
   }, hold);
 }
 </script>
